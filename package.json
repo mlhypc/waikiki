@@ -1,0 +1,26 @@
+{
+  "name": "waikiki-store-experiment",
+  "version": "1.0.0",
+  "description": "User behavior tracking platform for e-commerce experiments",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "seed": "cd backend && npm run seed",
+    "dev:backend": "cd backend && npm start",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev": "echo 'Run backend and frontend separately in different terminals'"
+  },
+  "keywords": [
+    "user-behavior",
+    "analytics",
+    "ab-testing",
+    "ecommerce",
+    "experiment"
+  ],
+  "author": "",
+  "license": "ISC"
+}
