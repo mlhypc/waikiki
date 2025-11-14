@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useStore } from '@/lib/context';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { getCartQuantity } from '@/lib/utils';
 
 export const Cart: React.FC = () => {
   const { cart, addToCart, removeFromCart, cartTotal, checkout, user } = useStore();
@@ -31,7 +32,7 @@ export const Cart: React.FC = () => {
         onClick={handleToggle}
         className="fixed top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors z-50"
       >
-        Cart ({cart.reduce((sum, item) => sum + item.quantity, 0)})
+        Cart ({getCartQuantity(cart)})
       </button>
 
       {/* Cart Sidebar */}

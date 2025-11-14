@@ -13,7 +13,11 @@
       "Bash(git remote add origin https://github.com/mlhypc/waikiki.git)",
       "Bash(git branch -M main)",
       "Bash(git push -u origin main)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(taskkill:*)",
+      "Bash(nul)",
+      "Bash(npm uninstall:*)",
+      "Bash(postcss.config.js)"
     ],
     "deny": [],
     "ask": []

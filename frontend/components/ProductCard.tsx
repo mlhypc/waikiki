@@ -35,7 +35,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, position }) =
 
   return (
     <div
-      className="group bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer"
+      className="group bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 transition-all cursor-pointer"
       onClick={handleClick}
       {...hoverProps}
       onMouseEnter={() => {
@@ -44,45 +44,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, position }) =
       }}
     >
       {/* Product Image */}
-      <div className="relative w-full aspect-[3/4] overflow-hidden bg-gray-100">
+      <div className="relative w-full aspect-[4/5] overflow-hidden bg-gray-50">
         <Image
           src={product.image}
           alt={product.name}
           fill
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
+          className="object-cover"
         />
         {/* Quick Add Button - Shows on Hover */}
         <button
           onClick={handleAddToCart}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-gray-900 px-6 py-2 rounded-full font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-red-600 hover:text-white shadow-lg"
+          className="absolute bottom-3 left-3 right-3 bg-black text-white py-2 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity"
         >
-          Add to Cart
+          Sepete Ekle
         </button>
       </div>
 
       {/* Product Info */}
-      <div className="p-4">
-        <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">
-          {product.category}
-        </p>
-        <h3 className="font-medium text-gray-900 mb-2 line-clamp-2 h-12">
+      <div className="p-3">
+        <h3 className="text-sm text-gray-900 mb-1 line-clamp-2 min-h-[2.5rem]">
           {product.name}
         </h3>
         <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-lg font-bold text-gray-900">
-              ${product.price.toFixed(2)}
-            </span>
-          </div>
-          <button
-            onClick={handleAddToCart}
-            className="text-gray-400 hover:text-red-600 transition-colors"
-            aria-label="Add to favorites"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-          </button>
+          <span className="text-base font-semibold text-gray-900">
+            {product.price.toFixed(2)}
+          </span>
         </div>
       </div>
     </div>
