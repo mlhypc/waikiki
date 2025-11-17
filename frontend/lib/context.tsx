@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { User, Product, initUser, updateUserBalance } from './api';
 import { initAnalytics, getAnalytics } from './analytics';
 
-interface CartItem {
+export interface CartItem {
   product: Product;
   quantity: number;
 }

@@ -17,7 +17,8 @@
       "Bash(taskkill:*)",
       "Bash(nul)",
       "Bash(npm uninstall:*)",
-      "Bash(postcss.config.js)"
+      "Bash(postcss.config.js)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

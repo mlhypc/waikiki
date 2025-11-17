@@ -95,13 +95,71 @@ export function BottomNav() {
       }}>
         {navItems.map((item) => {
           const isDisabled = item.disabled;
-          const ItemTag = isDisabled ? 'button' : Link;
-          const itemProps = isDisabled ? { disabled: true, type: 'button' as const } : { href: item.href };
+
+          if (isDisabled) {
+            return (
+              <button
+                key={item.id}
+                disabled={true}
+                type="button"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flex: 1,
+                  padding: '8px 4px',
+                  opacity: 0.4,
+                  cursor: 'not-allowed',
+                  color: '#4b5563',
+                  textDecoration: 'none',
+                  border: 'none',
+                  background: 'none',
+                }}
+              >
+                <div style={{ position: 'relative', width: '24px', height: '24px' }}>
+                  {item.icon}
+                  {item.badge && item.badge > 0 && (
+                    <span style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      backgroundColor: '#dc2626',
+                      color: 'white',
+                      fontSize: '11px',
+                      borderRadius: '10px',
+                      minWidth: '18px',
+                      height: '18px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: '700',
+                      padding: '0 4px',
+                      lineHeight: '1',
+                    }}>
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </span>
+                  )}
+                </div>
+                <span style={{
+                  fontSize: '0.75rem',
+                  marginTop: '4px',
+                  fontWeight: '500',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '100%',
+                }}>
+                  {item.label}
+                </span>
+              </button>
+            );
+          }
 
           return (
-            <ItemTag
+            <Link
               key={item.id}
-              {...itemProps}
+              href={item.href!}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -152,7 +210,7 @@ export function BottomNav() {
               }}>
                 {item.label}
               </span>
-            </ItemTag>
+            </Link>
           );
         })}
       </div>
