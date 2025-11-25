@@ -9,9 +9,6 @@ dotenv.config();
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/waikiki-store';
 const DATA_PATH = 'C:\\Users\\Qwilleran\\Desktop\\waikiki_model\\DATA_GET\\data\\0_3-data_seperated';
 
-// Limit number of photos per product (must match copy-images.js)
-const limit_get = 2;
-
 // Parse Turkish price string to number
 function parseTurkishPrice(priceStr) {
   if (!priceStr) return null;
@@ -87,18 +84,18 @@ function processProduct(infoJsonPath) {
     const discountedPrice = parseTurkishPrice(data.discounted_price);
     const finalPrice = discountedPrice || originalPrice || 0;
 
-    // Get image paths
-    const productDir = path.dirname(infoJsonPath);
-    const photosDir = path.join(productDir, 'photos');
+    // Get image paths - check what's actually in the public/products folder
     const images = [];
 
-    if (fs.existsSync(photosDir)) {
-      const photoFiles = fs.readdirSync(photosDir)
-        .filter(f => f.endsWith('.jpg') || f.endsWith('.png'))
-        .sort()
-        .slice(0, limit_get); // Limit number of photos per product
+    // Check the actual copied images in frontend/public/products
+    const publicProductDir = path.join(__dirname, '..', 'frontend', 'public', 'products', data.folder_name);
 
-      photoFiles.forEach(photo => {
+    if (fs.existsSync(publicProductDir)) {
+      const copiedPhotos = fs.readdirSync(publicProductDir)
+        .filter(f => f.endsWith('.jpg') || f.endsWith('.png'))
+        .sort();
+
+      copiedPhotos.forEach(photo => {
         // Store relative path for frontend
         images.push(`/products/${data.folder_name}/${photo}`);
       });
