@@ -9,6 +9,9 @@ dotenv.config();
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/waikiki-store';
 const DATA_PATH = 'C:\\Users\\Qwilleran\\Desktop\\waikiki_model\\DATA_GET\\data\\0_3-data_seperated';
 
+// Limit number of photos per product (must match copy-images.js)
+const limit_get = 2;
+
 // Parse Turkish price string to number
 function parseTurkishPrice(priceStr) {
   if (!priceStr) return null;
@@ -92,7 +95,8 @@ function processProduct(infoJsonPath) {
     if (fs.existsSync(photosDir)) {
       const photoFiles = fs.readdirSync(photosDir)
         .filter(f => f.endsWith('.jpg') || f.endsWith('.png'))
-        .sort();
+        .sort()
+        .slice(0, limit_get); // Limit number of photos per product
 
       photoFiles.forEach(photo => {
         // Store relative path for frontend
