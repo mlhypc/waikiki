@@ -14,7 +14,7 @@ interface BreadcrumbProps {
 export function Breadcrumb({ items }: BreadcrumbProps) {
   return (
     <nav
-      className="text-sm text-gray-500 !py-4 !px-4"
+      className="text-sm text-gray-500 !pb-6 !px-4"
       aria-label="Breadcrumb"
     >
       <ol className="flex items-center flex-wrap !gap-1">
@@ -29,7 +29,7 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
                 {item.label}
               </Link>
             ) : (
-              <span className="text-gray-900 font-medium capitalize">{item.label}</span>
+              <span className="text-gray-900 font-bold capitalize">{item.label}</span>
             )}
           </li>
         ))}

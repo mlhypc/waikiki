@@ -6,16 +6,32 @@ export interface User {
   balance: number;
   totalPurchases: number;
   totalSpent: number;
+  surveyResponses?: {
+    age: string;
+    gender: string;
+    completedAt: Date;
+  };
 }
 
 export interface Product {
   productId: string;
   name: string;
-  description: string;
+  description: string[];
   price: number;
+  originalPrice?: number;
+  discountedPrice?: number;
+  currency: string;
   category: string;
+  gender: string;
+  images: string[];
   image: string;
+  sizes: string[];
   stock: number;
+  productCode?: string;
+  mannequinInfo?: string;
+  properties?: any;
+  combinationSuggestions?: any[];
+  relatedProducts?: string[];
 }
 
 export interface TrackEventParams {
@@ -57,15 +73,46 @@ export const updateUserBalance = async (
   return data.user;
 };
 
+export const submitSurvey = async (
+  userId: string,
+  age: string,
+  gender: string
+): Promise<User> => {
+  const response = await fetch(`${API_URL}/api/users/${userId}/survey`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ age, gender }),
+  });
+  const data = await response.json();
+  return data.user;
+};
+
+export interface PaginatedProducts {
+  products: Product[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 // Products API
-export const getProducts = async (abTestGroup?: string, category?: string): Promise<Product[]> => {
+export const getProducts = async (
+  abTestGroup?: string,
+  category?: string,
+  page: number = 1,
+  limit: number = 20
+): Promise<PaginatedProducts> => {
   const params = new URLSearchParams();
   if (abTestGroup) params.append('abTestGroup', abTestGroup);
   if (category) params.append('category', category);
+  params.append('page', page.toString());
+  params.append('limit', limit.toString());
 
   const response = await fetch(`${API_URL}/api/products?${params.toString()}`);
   const data = await response.json();
-  return data.products;
+  return data;
 };
 
 export const getProduct = async (productId: string, abTestGroup?: string): Promise<Product> => {
@@ -73,6 +120,12 @@ export const getProduct = async (productId: string, abTestGroup?: string): Promi
   const response = await fetch(`${API_URL}/api/products/${productId}${params}`);
   const data = await response.json();
   return data.product;
+};
+
+export const getSuggestions = async (productId: string, abTestGroup: string): Promise<Product[]> => {
+  const response = await fetch(`${API_URL}/api/products/suggestions/${productId}?abTestGroup=${abTestGroup}`);
+  const data = await response.json();
+  return data.suggestions;
 };
 
 // Events API

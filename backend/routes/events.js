@@ -5,6 +5,14 @@ const Event = require('../models/Event');
 // Track event
 router.post('/', async (req, res) => {
   try {
+    // Check if survey mode is enabled
+    const surveyMode = process.env.SURVEY_MODE === 'true';
+
+    if (!surveyMode) {
+      // In test mode, acknowledge but don't save
+      return res.status(201).json({ success: true, mode: 'test', saved: false });
+    }
+
     const {
       userId,
       sessionId,
@@ -31,7 +39,7 @@ router.post('/', async (req, res) => {
     });
 
     await event.save();
-    res.status(201).json({ success: true, eventId: event._id });
+    res.status(201).json({ success: true, eventId: event._id, mode: 'survey', saved: true });
   } catch (error) {
     console.error('Event tracking error:', error);
     res.status(500).json({ error: 'Failed to track event' });
@@ -41,6 +49,14 @@ router.post('/', async (req, res) => {
 // Batch track events (for better performance)
 router.post('/batch', async (req, res) => {
   try {
+    // Check if survey mode is enabled
+    const surveyMode = process.env.SURVEY_MODE === 'true';
+
+    if (!surveyMode) {
+      // In test mode, acknowledge but don't save
+      return res.status(201).json({ success: true, mode: 'test', saved: false, count: 0 });
+    }
+
     const { events } = req.body;
 
     if (!Array.isArray(events) || events.length === 0) {
@@ -54,7 +70,7 @@ router.post('/batch', async (req, res) => {
     }));
 
     await Event.insertMany(enrichedEvents);
-    res.status(201).json({ success: true, count: events.length });
+    res.status(201).json({ success: true, mode: 'survey', saved: true, count: events.length });
   } catch (error) {
     console.error('Batch event tracking error:', error);
     res.status(500).json({ error: 'Failed to track events' });

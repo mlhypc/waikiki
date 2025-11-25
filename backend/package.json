@@ -5,7 +5,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "seed": "node seed.js"
+    "import": "node import-lcw-data.js",
+    "copy-images": "node copy-images.js",
+    "setup": "node copy-images.js && node import-lcw-data.js"
   },
   "keywords": [],
   "author": "",

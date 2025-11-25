@@ -12,19 +12,25 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, position }) => {
-  const { addToCart } = useStore();
+  const { addToFavorites, removeFromFavorites, isFavorite, setSelectedProductId } = useStore();
   const analytics = useAnalytics();
   const hoverProps = useHoverTracking(`product-card-${product.productId}`);
 
-  const handleClick = () => {
+  const handleProductClick = () => {
     if (analytics) {
       analytics.trackProductClick(product.productId, product.name, position);
     }
+    setSelectedProductId(product.productId);
   };
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
-    addToCart(product);
+    if (isFavorite(product.productId)) {
+      removeFromFavorites(product.productId);
+    } else {
+      addToFavorites(product);
+    }
   };
 
   const handleProductView = () => {
@@ -35,8 +41,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, position }) =
 
   return (
     <div
-      className="group bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 transition-all cursor-pointer"
-      onClick={handleClick}
+      onClick={handleProductClick}
+      className="group bg-white overflow-hidden hover:border-gray-300 transition-all cursor-pointer"
       {...hoverProps}
       onMouseEnter={() => {
         hoverProps.onMouseEnter();
@@ -44,32 +50,41 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, position }) =
       }}
     >
       {/* Product Image */}
-      <div className="relative w-full aspect-[4/5] overflow-hidden bg-gray-50">
+      <div className="relative w-full aspect-[8/10] overflow-hidden bg-gray-50">
         <Image
           src={product.image}
           alt={product.name}
           fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className="object-cover"
         />
-        {/* Quick Add Button - Shows on Hover */}
-        <button
-          onClick={handleAddToCart}
-          className="absolute bottom-3 left-3 right-3 bg-black text-white py-2 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-        >
-          Sepete Ekle
-        </button>
       </div>
 
       {/* Product Info */}
-      <div className="p-3">
-        <h3 className="text-sm text-gray-900 mb-1 line-clamp-2 min-h-[2.5rem]">
+      <div className="p-3 flex justify-between items-start">
+        <h3 className="text-xs text-gray-900 line-clamp-2 flex-1">
           {product.name}
         </h3>
-        <div className="flex items-center justify-between">
-          <span className="text-base font-semibold text-gray-900">
-            {product.price.toFixed(2)}
-          </span>
-        </div>
+        {/* Favorite Button */}
+        <button
+          onClick={handleToggleFavorite}
+          className="ml-2 p-1 hover:bg-gray-100 rounded transition-colors flex-shrink-0"
+          aria-label={isFavorite(product.productId) ? 'Remove from favorites' : 'Add to favorites'}
+        >
+          <svg
+            className="w-5 h-5"
+            fill={isFavorite(product.productId) ? 'currentColor' : 'none'}
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+            />
+          </svg>
+        </button>
       </div>
     </div>
   );

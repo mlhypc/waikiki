@@ -5,6 +5,7 @@ let flushTimeout: NodeJS.Timeout | null = null;
 
 const FLUSH_INTERVAL = 5000; // Flush events every 5 seconds
 const MAX_QUEUE_SIZE = 50; // Flush if queue reaches 50 events
+const SURVEY_MODE = process.env.NEXT_PUBLIC_SURVEY_MODE === 'true';
 
 export class Analytics {
   private userId: string;
@@ -21,6 +22,12 @@ export class Analytics {
     this.startTime = Date.now();
     this.pageStartTime = Date.now();
     this.currentPage = '';
+
+    // Log survey mode status
+    const mode = SURVEY_MODE ? '📊 SURVEY MODE' : '🧪 TEST MODE';
+    const status = SURVEY_MODE ? 'Data is being collected' : 'Data is NOT being saved';
+    console.log(`%c${mode}`, 'font-weight: bold; font-size: 14px; color: ' + (SURVEY_MODE ? '#10b981' : '#f59e0b'));
+    console.log(`%c${status}`, 'font-size: 12px; color: ' + (SURVEY_MODE ? '#059669' : '#d97706'));
   }
 
   private queueEvent(eventType: string, eventData: any) {
@@ -55,7 +62,12 @@ export class Analytics {
       flushTimeout = null;
     }
 
-    await trackEventBatch(events);
+    // Only send events if survey mode is enabled
+    if (SURVEY_MODE) {
+      await trackEventBatch(events);
+    } else {
+      console.log('🧪 TEST MODE: Events not sent to server', events.length, 'events');
+    }
   }
 
   // Page tracking

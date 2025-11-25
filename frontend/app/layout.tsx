@@ -1,15 +1,36 @@
+'use client';
+
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { StoreProvider } from '@/lib/context';
+import { StoreProvider, useStore } from '@/lib/context';
 import { BottomNav } from '@/components/BottomNav';
+import { Cart } from '@/components/Cart';
+import { Favorites } from '@/components/Favorites';
+import { ProductDetailModal } from '@/components/ProductDetailModal';
+import SurveyModal from '@/components/SurveyModal';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export const metadata: Metadata = {
-  title: 'Waikiki Store - User Behavior Experiment',
-  description: 'A clothing store for testing user behavior and purchase patterns',
-};
+function LayoutContent({ children }: { children: React.ReactNode }) {
+  const { showSurvey, handleSurveySubmit, selectedProductId, setSelectedProductId } = useStore();
+
+  return (
+    <>
+      {children}
+      <Cart />
+      <Favorites />
+      <BottomNav />
+      {showSurvey && <SurveyModal onSubmit={handleSurveySubmit} />}
+      {selectedProductId && (
+        <ProductDetailModal
+          productId={selectedProductId}
+          onClose={() => setSelectedProductId(null)}
+        />
+      )}
+    </>
+  );
+}
 
 export default function RootLayout({
   children,
@@ -17,11 +38,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="tr">
       <body className={inter.className}>
         <StoreProvider>
-          {children}
-          <BottomNav />
+          <LayoutContent>{children}</LayoutContent>
         </StoreProvider>
       </body>
     </html>

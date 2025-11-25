@@ -22,6 +22,17 @@ const userSchema = new mongoose.Schema({
     firstVisit: Date,
     lastVisit: Date
   },
+  surveyResponses: {
+    age: {
+      type: String,
+      enum: ['18-24', '25-34', '35-44', '45+', '']
+    },
+    gender: {
+      type: String,
+      enum: ['Kadın', 'Erkek', 'Diğer', '']
+    },
+    completedAt: Date
+  },
   totalPurchases: {
     type: Number,
     default: 0

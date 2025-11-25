@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Header } from '@/components/Header';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useStore } from '@/lib/context';
@@ -15,40 +16,40 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="h-screen bg-white flex flex-col">
       <Header />
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4">
-        <div className="text-center mb-16">
-        </div>
-
-        {/* Gender Selection Cards */}
-        <div className="grid grid-cols-2 gap-6 max-w-2xl mx-auto">
-          {/* Women Card */}
-          <Link href="/kadin">
-            <div className="group relative overflow-hidden cursor-pointer transition-all hover:shadow-md">
-              <div className="aspect-[3/4] flex items-center justify-center p-6">
-                <div className="text-center">
-                  <div className="text-6xl mb-3">👗</div>
-                  <h2 className="text-2xl font-semibold text-gray-900">KADIN</h2>
-                </div>
-              </div>
+      <main className="flex-1 flex flex-col md:flex-row gap-0 md:gap-0 overflow-hidden pb-14 md:pb-0 pt-16 md:pt-20">
+        {/* Women Card */}
+        <Link href="/kadin" className="flex-1 relative group">
+          <div className="absolute inset-0">
+            <Image
+              src="/category_photos/kadın.jpg"
+              alt="Kadın"
+              fill
+              className="object-cover object-top"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-30 hover:bg-opacity-20 transition-all flex items-center justify-center">
+              <h2 className="text-4xl md:text-5xl font-bold text-white">KADIN</h2>
             </div>
-          </Link>
+          </div>
+        </Link>
 
-          {/* Men Card */}
-          <Link href="/erkek">
-            <div className="group relative overflow-hidden cursor-pointer transition-all hover:shadow-md">
-              <div className="aspect-[3/4] flex items-center justify-center p-6">
-                <div className="text-center">
-                  <div className="text-6xl mb-3">👔</div>
-                  <h2 className="text-2xl font-semibold text-gray-900">ERKEK</h2>
-                </div>
-              </div>
+        {/* Men Card */}
+        <Link href="/erkek" className="flex-1 relative group">
+          <div className="absolute inset-0">
+            <Image
+              src="/category_photos/erkek.jpg"
+              alt="Erkek"
+              fill
+              className="object-cover object-top"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-30 hover:bg-opacity-20 transition-all flex items-center justify-center">
+              <h2 className="text-4xl md:text-5xl font-bold text-white">ERKEK</h2>
             </div>
-          </Link>
-        </div>
+          </div>
+        </Link>
       </main>
     </div>
   );

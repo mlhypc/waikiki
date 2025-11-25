@@ -20,6 +20,18 @@ interface StoreContextType {
   cartTotal: number;
   checkout: () => Promise<boolean>;
   isLoading: boolean;
+  isCartOpen: boolean;
+  setIsCartOpen: (open: boolean) => void;
+  showSurvey: boolean;
+  handleSurveySubmit: (age: string, gender: string) => Promise<void>;
+  favorites: Product[];
+  addToFavorites: (product: Product) => void;
+  removeFromFavorites: (productId: string) => void;
+  isFavorite: (productId: string) => boolean;
+  isFavoritesOpen: boolean;
+  setIsFavoritesOpen: (open: boolean) => void;
+  selectedProductId: string | null;
+  setSelectedProductId: (productId: string | null) => void;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -53,6 +65,36 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [sessionId] = useState<string>(() => getSessionId());
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [showSurvey, setShowSurvey] = useState(false);
+  const [favorites, setFavorites] = useState<Product[]>([]);
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+
+  // Custom setters that close other modals when opening cart/favorites
+  const openCart = (open: boolean) => {
+    if (open) {
+      if (selectedProductId) {
+        setSelectedProductId(null); // Close product modal first
+      }
+      if (isFavoritesOpen) {
+        setIsFavoritesOpen(false); // Close favorites first
+      }
+    }
+    setIsCartOpen(open);
+  };
+
+  const openFavorites = (open: boolean) => {
+    if (open) {
+      if (selectedProductId) {
+        setSelectedProductId(null); // Close product modal first
+      }
+      if (isCartOpen) {
+        setIsCartOpen(false); // Close cart first
+      }
+    }
+    setIsFavoritesOpen(open);
+  };
 
   // Initialize user and analytics
   useEffect(() => {
@@ -69,6 +111,14 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const analytics = getAnalytics();
         if (analytics) {
           analytics.trackPageView('home', document.referrer);
+        }
+
+        // Check if survey should be shown (only in survey mode and if not completed)
+        const surveyMode = process.env.NEXT_PUBLIC_SURVEY_MODE === 'true';
+        const surveyCompleted = localStorage.getItem('surveyCompleted');
+
+        if (surveyMode && !surveyCompleted && !userData.surveyResponses?.completedAt) {
+          setShowSurvey(true);
         }
       } catch (error) {
         console.error('Failed to initialize user:', error);
@@ -103,6 +153,22 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (typeof window === 'undefined') return;
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
+
+  // Load favorites from localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const savedFavorites = localStorage.getItem('favorites');
+    if (savedFavorites) {
+      setFavorites(JSON.parse(savedFavorites));
+    }
+  }, []);
+
+  // Save favorites to localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+  }, [favorites]);
 
   const addToCart = (product: Product) => {
     setCart((prevCart) => {
@@ -200,6 +266,39 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
+  const handleSurveySubmit = async (age: string, gender: string) => {
+    if (!user) return;
+
+    try {
+      const { submitSurvey } = await import('./api');
+      await submitSurvey(user.userId, age, gender);
+
+      // Mark survey as completed in localStorage
+      localStorage.setItem('surveyCompleted', 'true');
+      setShowSurvey(false);
+    } catch (error) {
+      console.error('Survey submission failed:', error);
+    }
+  };
+
+  const addToFavorites = (product: Product) => {
+    setFavorites((prevFavorites) => {
+      const exists = prevFavorites.find((p) => p.productId === product.productId);
+      if (exists) return prevFavorites;
+      return [...prevFavorites, product];
+    });
+  };
+
+  const removeFromFavorites = (productId: string) => {
+    setFavorites((prevFavorites) =>
+      prevFavorites.filter((p) => p.productId !== productId)
+    );
+  };
+
+  const isFavorite = (productId: string): boolean => {
+    return favorites.some((p) => p.productId === productId);
+  };
+
   return (
     <StoreContext.Provider
       value={{
@@ -212,6 +311,18 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         cartTotal,
         checkout,
         isLoading,
+        isCartOpen,
+        setIsCartOpen: openCart,
+        showSurvey,
+        handleSurveySubmit,
+        favorites,
+        addToFavorites,
+        removeFromFavorites,
+        isFavorite,
+        isFavoritesOpen,
+        setIsFavoritesOpen: openFavorites,
+        selectedProductId,
+        setSelectedProductId,
       }}
     >
       {children}

@@ -29,7 +29,10 @@ const eventSchema = new mongoose.Schema({
       'time_spent',
       'search',
       'filter_applied',
-      'sort_applied'
+      'sort_applied',
+      'suggestion_view',
+      'suggestion_click',
+      'suggestion_add_to_cart'
     ]
   },
   eventData: {
