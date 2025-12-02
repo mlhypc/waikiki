@@ -43,10 +43,10 @@ export default function SurveyModal({ onSubmit }: SurveyModalProps) {
         {/* Step 1: Welcome */}
         {step === 1 && (
           <div className="text-center">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
             Online Alışveriş Deneyimi Simülasyonuna Hoş Geldiniz!
             </h2>
-            <div className="text-gray-700 text-sm sm:text-base mb-3 space-y-2 text-left">
+            <div className="text-gray-700 text-base sm:text-lg mb-4 space-y-3 text-left">
               <p className="leading-relaxed">
                 <strong>Değerli Katılımcı,</strong>
               </p>
@@ -59,7 +59,7 @@ export default function SurveyModal({ onSubmit }: SurveyModalProps) {
               </p>
             </div>
 
-            <p className="text-center text-xs sm:text-sm italic text-gray-600 mb-3">
+            <p className="text-center text-xs sm:text-sm italic text-gray-600 mb-4">
               Verileriniz gizlidir ve yalnızca akademik araştırma amacıyla kullanılacaktır.
             </p>
 
@@ -196,7 +196,7 @@ export default function SurveyModal({ onSubmit }: SurveyModalProps) {
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
               Deney Adımları
             </h2>
-            <div className="text-gray-700 text-sm sm:text-base mb-3 space-y-2 text-left">
+            <div className="text-gray-700 text-base sm:text-lg mb-3 space-y-2 text-left p-2">
               <p className="leading-relaxed">
                 <strong>-</strong> Websitesine yönlendirileceksiniz. Lütfen her kategoriden en az bir (1) ürün sepetinize ekleyiniz
               </p>
