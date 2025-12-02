@@ -27,7 +27,8 @@
       "Bash(timeout 4 bash:*)",
       "Bash(timeout 1 bash:*)",
       "Bash(netstat:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(node upload-to-b2.js:*)"
     ],
     "deny": [],
     "ask": []
