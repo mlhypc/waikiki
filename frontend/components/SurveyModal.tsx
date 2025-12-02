@@ -53,12 +53,14 @@ export default function SurveyModal({ onSubmit }: SurveyModalProps) {
               <p className="leading-relaxed">
                 Bu çalışma, İstanbul Teknik Üniversitesi bünyesinde yürütülen bir bitirme projesi kapsamında,
                 online alışveriş deneyimini iyileştirmek amacıyla hazırlanmıştır.
+              </p>
+              <p>
                 Katkılarınız, projemizin başarısı için büyük önem taşımaktadır. Teşekkür ederiz!
               </p>
-              
+
               <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
-                <h3 className="font-semibold text-gray-800 mb-3">Deney Adımları</h3>
-                <ol className="space-y-2 list-decimal list-inside">
+                <h3 className="font-semibold text-gray-800 mb-2">Deney Adımları</h3>
+                <ol className="space-y-1 list-decimal list-inside">
                   <li className="leading-relaxed">
                     <strong>Anket:</strong> Kısa soruları yanıtlayınız.
                   </li>
@@ -71,7 +73,7 @@ export default function SurveyModal({ onSubmit }: SurveyModalProps) {
                 </ol>
               </div>
 
-              <p className="text-center italic text-gray-600 mt-2">
+              <p className="text-center text-xs sm:text-sm italic text-gray-600 mt-2">
                 Verileriniz gizlidir ve yalnızca akademik araştırma amacıyla kullanılacaktır.
               </p>
             </div>
