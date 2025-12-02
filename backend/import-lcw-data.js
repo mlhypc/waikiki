@@ -107,10 +107,12 @@ function processProduct(infoJsonPath) {
     // Process combination suggestions with product IDs
     const combinationSuggestions = processCombinationSuggestions(data.combination_suggestions);
 
-    // Clean product name - remove "LCW" and "LCW STEPS" prefixes
+    // Clean product name - remove brand prefixes
     const cleanName = (data.title || '')
       .replace(/LCW\s+STEPS\s*/gi, '')
+      .replace(/LCWAIKIKI\s*/gi, '')
       .replace(/LCW\s*/gi, '')
+      .replace(/XSIDE\s*/gi, '')
       .trim();
 
     return {

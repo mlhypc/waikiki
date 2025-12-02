@@ -43,11 +43,10 @@ export default function SurveyModal({ onSubmit }: SurveyModalProps) {
         {/* Step 1: Welcome */}
         {step === 1 && (
           <div className="text-center">
-            <div className="text-5xl mb-4">🚀</div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
             Online Alışveriş Deneyimi Simülasyonuna Hoş Geldiniz!
             </h2>
-            <div className="text-gray-700 text-sm sm:text-base mb-8 space-y-4 text-left">
+            <div className="text-gray-700 text-sm sm:text-base mb-4 space-y-4 text-left">
               <p className="leading-relaxed">
                 <strong>Değerli Katılımcı,</strong>
               </p>
@@ -71,7 +70,7 @@ export default function SurveyModal({ onSubmit }: SurveyModalProps) {
                 </ol>
               </div>
 
-              <p className="text-center italic text-gray-600 mt-4">
+              <p className="text-center italic text-gray-600 mt-3">
                 Katkılarınız, projemizin başarısı için büyük önem taşımaktadır. Teşekkür ederiz!
               </p>
             </div>

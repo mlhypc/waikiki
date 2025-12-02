@@ -30,7 +30,8 @@
       "Bash(findstr:*)",
       "Bash(node upload-to-b2.js:*)",
       "Bash(git push:*)",
-      "Bash(node fix-b2-urls.js:*)"
+      "Bash(node fix-b2-urls.js:*)",
+      "Bash(node import-lcw-data.js:*)"
     ],
     "deny": [],
     "ask": []
