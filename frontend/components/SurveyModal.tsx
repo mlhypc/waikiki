@@ -47,21 +47,39 @@ export default function SurveyModal({ onSubmit }: SurveyModalProps) {
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
             Online Alışveriş Deneyimi Simülasyonuna Hoş Geldiniz!
             </h2>
-            <p className="text-gray-600 text-sm sm:text-base mb-8">
-            Değerli Katılımcı,
-            Bu çalışma, İstanbul Teknik Üniversitesi (İTÜ) bünyesinde yürütülen bir bitirme projesi kapsamında, online alışveriş deneyimini iyileştirmek amacıyla hazırlanmıştır.
-            
-            Deney Adımları
-            1. Anket: Kısa soruları yanıtlayınız.
-            2. Simülasyon: Websitesine yönlendirileceksiniz. Lütfen her kategoriden en az bir (1) ürün sepetinize ekleyiniz.
-            3. Simülasyon Sonu: Sepetteki "Simülasyonu Bitir" butonuna tıkladığınızda deney sona erecektir.
+            <div className="text-gray-700 text-sm sm:text-base mb-8 space-y-4 text-left">
+              <p className="leading-relaxed">
+                <strong>Değerli Katılımcı,</strong>
+              </p>
+              <p className="leading-relaxed">
+                Bu çalışma, İstanbul Teknik Üniversitesi (İTÜ) bünyesinde yürütülen bir bitirme projesi kapsamında,
+                online alışveriş deneyimini iyileştirmek amacıyla hazırlanmıştır.
+              </p>
 
-            </p>
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                <h3 className="font-semibold text-gray-800 mb-3">Deney Adımları</h3>
+                <ol className="space-y-2 list-decimal list-inside">
+                  <li className="leading-relaxed">
+                    <strong>Anket:</strong> Kısa soruları yanıtlayınız.
+                  </li>
+                  <li className="leading-relaxed">
+                    <strong>Simülasyon:</strong> Websitesine yönlendirileceksiniz. Lütfen her kategoriden en az bir (1) ürün sepetinize ekleyiniz.
+                  </li>
+                  <li className="leading-relaxed">
+                    <strong>Simülasyon Sonu:</strong> Sepetteki "Simülasyonu Bitir" butonuna tıkladığınızda deney sona erecektir.
+                  </li>
+                </ol>
+              </div>
+
+              <p className="text-center italic text-gray-600 mt-4">
+                Katkılarınız, projemizin başarısı için büyük önem taşımaktadır. Teşekkür ederiz!
+              </p>
+            </div>
             <button
               onClick={handleNext}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition-all"
             >
-            Katkılarınız, projemizin başarısı için büyük önem taşımaktadır. Teşekkür ederiz!
+              Devam Et
             </button>
           </div>
         )}
@@ -69,13 +87,6 @@ export default function SurveyModal({ onSubmit }: SurveyModalProps) {
         {/* Step 2: Questions - Part 1 (Gender & Age) */}
         {step === 2 && (
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 text-center">
-              Sizi Tanıyalım
-            </h2>
-            <p className="text-gray-500 text-xs sm:text-sm mb-5 text-center">
-              Lütfen aşağıdaki soruları cevaplayın
-            </p>
-
             <div className="space-y-5">
               {/* Gender */}
               <div>
@@ -144,9 +155,6 @@ export default function SurveyModal({ onSubmit }: SurveyModalProps) {
         {/* Step 3: Questions - Part 2 (Frequency) */}
         {step === 3 && (
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 text-center">
-              Son Soru
-            </h2>
             <p className="text-gray-500 text-xs sm:text-sm mb-5 text-center">
               Alışveriş sıklığınızı belirtin
             </p>
