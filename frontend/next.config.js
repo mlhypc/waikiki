@@ -16,7 +16,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 's3.eu-central-003.backblazeb2.com',
+        hostname: 'f003.backblazeb2.com',
         port: '',
         pathname: '/file/waikikiphotos/**',
       },

@@ -32,8 +32,10 @@ async function uploadFile(filePath, key) {
 
   await s3Client.send(command);
 
-  // Return public URL
-  return `https://${process.env.B2_ENDPOINT}/file/${BUCKET_NAME}/${key}`;
+  // Return public URL (Friendly URL format for public buckets)
+  // S3 endpoint is for API operations, Friendly URL is for public access
+  const friendlyUrl = `https://f003.backblazeb2.com/file/${BUCKET_NAME}/${key}`;
+  return friendlyUrl;
 }
 
 // Get all product folders
