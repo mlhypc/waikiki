@@ -44,6 +44,13 @@ const userSchema = new mongoose.Schema({
   totalSpent: {
     type: Number,
     default: 0
+  },
+  simulationCompleted: {
+    type: Boolean,
+    default: false
+  },
+  simulationCompletedAt: {
+    type: Date
   }
 }, {
   timestamps: true

@@ -8,7 +8,14 @@ router.get('/', async (req, res) => {
   try {
     // User statistics
     const totalUsers = await User.countDocuments();
+    const completedSimulations = await User.countDocuments({ simulationCompleted: true });
     const usersByGroup = await User.aggregate([
+      { $group: { _id: '$abTestGroup', count: { $sum: 1 } } }
+    ]);
+
+    // Valid users (completed simulation)
+    const validUsersByGroup = await User.aggregate([
+      { $match: { simulationCompleted: true } },
       { $group: { _id: '$abTestGroup', count: { $sum: 1 } } }
     ]);
 
@@ -70,7 +77,13 @@ router.get('/', async (req, res) => {
       timestamp: new Date(),
       users: {
         total: totalUsers,
+        completedSimulations,
+        simulationCompletionRate: totalUsers > 0 ? ((completedSimulations / totalUsers) * 100).toFixed(2) + '%' : '0%',
         byGroup: usersByGroup.reduce((acc, { _id, count }) => {
+          acc[_id] = count;
+          return acc;
+        }, {}),
+        validUsersByGroup: validUsersByGroup.reduce((acc, { _id, count }) => {
           acc[_id] = count;
           return acc;
         }, {}),

@@ -12,6 +12,8 @@ export interface User {
     frequency: string;
     completedAt: Date;
   };
+  simulationCompleted?: boolean;
+  simulationCompletedAt?: Date;
 }
 
 export interface Product {
@@ -83,6 +85,17 @@ export const submitSurvey = async (
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ age, gender, frequency }),
+  });
+  const data = await response.json();
+  return data.user;
+};
+
+export const completeSimulation = async (
+  userId: string
+): Promise<User> => {
+  const response = await fetch(`${API_URL}/api/users/${userId}/complete-simulation`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
   });
   const data = await response.json();
   return data.user;

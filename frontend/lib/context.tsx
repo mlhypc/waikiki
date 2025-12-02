@@ -241,13 +241,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         analytics.trackCheckoutStart(cart, cartTotal);
       }
 
-      // Check if user has enough balance
-      if (user.balance < cartTotal) {
-        alert('Insufficient balance!');
-        return false;
-      }
-
-      // Deduct balance
+      // Deduct balance (simulation mode - no balance check needed)
       const updatedUser = await updateUserBalance(user.userId, cartTotal, 'deduct');
       setUser(updatedUser);
 

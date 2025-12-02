@@ -170,4 +170,38 @@ router.patch('/:userId/survey', async (req, res) => {
   }
 });
 
+// Complete simulation
+router.patch('/:userId/complete-simulation', async (req, res) => {
+  try {
+    // Check if survey mode is enabled
+    const surveyMode = process.env.SURVEY_MODE === 'true';
+
+    if (!surveyMode) {
+      // In test mode, return mock response
+      const mockUser = {
+        userId: req.params.userId,
+        simulationCompleted: true,
+        simulationCompletedAt: new Date()
+      };
+      return res.json({ user: mockUser, mode: 'test', saved: false });
+    }
+
+    const { userId } = req.params;
+
+    const user = await User.findOne({ userId });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    user.simulationCompleted = true;
+    user.simulationCompletedAt = new Date();
+
+    await user.save();
+    res.json({ user, mode: 'survey', saved: true });
+  } catch (error) {
+    console.error('Complete simulation error:', error);
+    res.status(500).json({ error: 'Failed to complete simulation' });
+  }
+});
+
 module.exports = router;

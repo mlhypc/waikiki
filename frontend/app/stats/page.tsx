@@ -6,7 +6,10 @@ interface Stats {
   timestamp: string;
   users: {
     total: number;
+    completedSimulations: number;
+    simulationCompletionRate: string;
     byGroup: { A?: number; B?: number; C?: number };
+    validUsersByGroup: { A?: number; B?: number; C?: number };
     surveyCompleted: number;
     surveyCompletionRate: string;
     demographics: {
@@ -154,6 +157,11 @@ export default function StatsPage() {
               <p className="text-sm text-gray-600">Total</p>
               <p className="text-2xl font-bold">{stats.users.total}</p>
             </div>
+            <div className="border rounded p-3 bg-green-50">
+              <p className="text-sm text-gray-600">✅ Completed</p>
+              <p className="text-2xl font-bold text-green-600">{stats.users.completedSimulations}</p>
+              <p className="text-xs text-gray-500 mt-1">{stats.users.simulationCompletionRate}</p>
+            </div>
             <div className="border rounded p-3">
               <p className="text-sm text-gray-600">Group A</p>
               <p className="text-2xl font-bold">{stats.users.byGroup.A || 0}</p>
@@ -168,7 +176,13 @@ export default function StatsPage() {
             </div>
           </div>
           <div className="border-t pt-4">
-            <p className="text-sm text-gray-600 mb-2">
+            <p className="text-sm font-semibold text-green-700 mb-2">✅ Valid Users (Completed Simulation):</p>
+            <div className="flex gap-4 mb-3">
+              <span className="text-sm">Group A: <strong>{stats.users.validUsersByGroup.A || 0}</strong></span>
+              <span className="text-sm">Group B: <strong>{stats.users.validUsersByGroup.B || 0}</strong></span>
+              <span className="text-sm">Group C: <strong>{stats.users.validUsersByGroup.C || 0}</strong></span>
+            </div>
+            <p className="text-sm text-gray-600">
               Survey Completed: <span className="font-semibold">{stats.users.surveyCompleted}</span> ({stats.users.surveyCompletionRate})
             </p>
           </div>

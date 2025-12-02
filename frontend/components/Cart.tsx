@@ -19,10 +19,22 @@ export const Cart: React.FC = () => {
   };
 
   const handleCheckout = async () => {
-    const success = await checkout();
-    if (success) {
-      alert('Satın alma başarılı! Alışverişiniz için teşekkür ederiz.');
-      setIsCartOpen(false);
+    if (!user) return;
+
+    try {
+      // Mark simulation as completed
+      const { completeSimulation } = await import('@/lib/api');
+      await completeSimulation(user.userId);
+
+      // Complete checkout
+      const success = await checkout();
+      if (success) {
+        alert('Simülasyon tamamlandı! Katılımınız için teşekkür ederiz.');
+        setIsCartOpen(false);
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Bir hata oluştu. Lütfen tekrar deneyin.');
     }
   };
 
@@ -252,7 +264,7 @@ export const Cart: React.FC = () => {
                         disabled={!user}
                         className="w-full bg-black text-white py-2.5 md:py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm md:text-base"
                       >
-                        Satın Al
+                        Simülasyonu Tamamla
                       </button>
                     </div>
                   </>
