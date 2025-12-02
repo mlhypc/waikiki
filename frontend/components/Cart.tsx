@@ -177,7 +177,10 @@ export const Cart: React.FC = () => {
                             {/* Product Image */}
                             <div className="relative w-16 h-20 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
                               <Image
-                                src={`http://localhost:5000${item.product.images?.[0] || '/placeholder.jpg'}`}
+                                src={(() => {
+                                  const img = item.product.images?.[0] || '/placeholder.jpg';
+                                  return img.startsWith('http') ? img : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${img}`;
+                                })()}
                                 alt={item.product.name}
                                 fill
                                 sizes="64px"

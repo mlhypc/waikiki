@@ -14,6 +14,18 @@ const nextConfig = {
         port: '5000',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'https',
+        hostname: 's3.eu-central-003.backblazeb2.com',
+        port: '',
+        pathname: '/file/waikikiphotos/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'backend-production-1994.up.railway.app',
+        port: '',
+        pathname: '/**',
+      },
     ],
     // Allow localhost images in development
     dangerouslyAllowSVG: true,

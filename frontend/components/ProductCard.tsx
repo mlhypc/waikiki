@@ -39,10 +39,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, position }) =
     }
   };
 
-  // Get the first valid image from the images array and convert to backend URL
+  // Get the first valid image from the images array
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
   const validImages = product.images?.filter(img => img && img.trim() !== '' && !img.includes('undefined')) || [];
-  const imageUrl = validImages.length > 0 ? `${API_URL}${validImages[0]}` : '';
+  const firstImage = validImages[0] || '';
+  // If image is already a full URL (starts with http), use it directly; otherwise prepend API_URL
+  const imageUrl = firstImage ? (firstImage.startsWith('http') ? firstImage : `${API_URL}${firstImage}`) : '';
 
   // Debug: Log first product to see what data we're getting
   if (product.productId === 'asimetrik-yaka-buzgulu-bluz-siyah-o-5065958') {

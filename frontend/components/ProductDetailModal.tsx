@@ -119,7 +119,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ productI
                   <div className="relative w-full aspect-[8/10] bg-gray-100 rounded-lg overflow-hidden mb-4">
                     {validImages.length > 0 ? (
                       <Image
-                        src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${validImages[selectedImageIndex] || validImages[0]}`}
+                        src={(() => {
+                          const img = validImages[selectedImageIndex] || validImages[0];
+                          return img.startsWith('http') ? img : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${img}`;
+                        })()}
                         alt={product.name}
                         fill
                         sizes="(max-width: 768px) 100vw, 50vw"
@@ -145,7 +148,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ productI
                           }`}
                         >
                           <Image
-                            src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${img}`}
+                            src={img.startsWith('http') ? img : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${img}`}
                             alt={`${product.name} ${index + 1}`}
                             fill
                             sizes="(max-width: 768px) 25vw, 12vw"
