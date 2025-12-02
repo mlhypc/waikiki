@@ -32,7 +32,7 @@ router.get('/', async (req, res) => {
       Product.countDocuments(query)
     ]);
 
-    // Convert image paths to backend URLs for all products
+    // Process images - keep B2 URLs as-is, convert local paths to backend URLs
     const processedProducts = products.map(product => {
       const productData = product.toObject();
 
@@ -40,6 +40,12 @@ router.get('/', async (req, res) => {
         productData.images = productData.images
           .filter(img => img) // Remove null/undefined
           .map(img => {
+            // If it's already a full URL (B2 CDN), keep it as-is
+            if (img.startsWith('http://') || img.startsWith('https://')) {
+              return img;
+            }
+
+            // Handle local paths
             let cleanPath = img.startsWith('/') ? img.slice(1) : img;
             // If path starts with 'products/', add 'uploads/' prefix
             if (cleanPath.startsWith('products/')) {
@@ -78,14 +84,20 @@ router.get('/:productId', async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    // Filter out images that don't exist on disk and convert to full URLs
-    const uploadsPath = process.env.UPLOADS_PATH || path.join(__dirname, '..', 'uploads');
+    // Process images - keep B2 URLs as-is, convert local paths to backend URLs
     const validImages = [];
 
     if (product.images && Array.isArray(product.images)) {
       for (const img of product.images) {
         if (!img) continue;
-        // Handle both /products/... and /uploads/products/... formats
+
+        // If it's already a full URL (B2 CDN), keep it as-is
+        if (img.startsWith('http://') || img.startsWith('https://')) {
+          validImages.push(img);
+          continue;
+        }
+
+        // Handle local paths
         let cleanPath = img.startsWith('/') ? img.slice(1) : img;
 
         // If path starts with 'products/', add 'uploads/' prefix
@@ -93,6 +105,7 @@ router.get('/:productId', async (req, res) => {
           cleanPath = 'uploads/' + cleanPath;
         }
 
+        const uploadsPath = process.env.UPLOADS_PATH || path.join(__dirname, '..', 'uploads');
         const imagePath = path.join(uploadsPath, cleanPath.replace('uploads/', ''));
 
         try {
