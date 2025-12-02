@@ -16,7 +16,7 @@ export const Header: React.FC = () => {
         <div className="flex items-center justify-center md:justify-between">
           {/* Logo - Centered on mobile, left on desktop */}
           <h1 className="text-3xl font-bold text-blue-600">
-            VVAIKIKI
+            MAĞAZA
           </h1>
 
           {/* Icons - Hidden on mobile (shown in BottomNav), visible on desktop */}

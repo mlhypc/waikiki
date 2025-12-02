@@ -107,9 +107,15 @@ function processProduct(infoJsonPath) {
     // Process combination suggestions with product IDs
     const combinationSuggestions = processCombinationSuggestions(data.combination_suggestions);
 
+    // Clean product name - remove "LCW" and "LCW STEPS" prefixes
+    const cleanName = (data.title || '')
+      .replace(/LCW\s+STEPS\s*/gi, '')
+      .replace(/LCW\s*/gi, '')
+      .trim();
+
     return {
       productId: data.folder_name,
-      name: data.title,
+      name: cleanName,
       description: data.description || [],
       price: finalPrice,
       originalPrice: originalPrice,
