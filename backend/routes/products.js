@@ -203,8 +203,8 @@ router.get('/suggestions/:productId', async (req, res) => {
 
       if (aiCategory) {
         // Get AI-powered recommendations - returns a single combination's items
-        const recommendedIds = aiRecommendationsLoader.getRecommendations(productId, aiCategory);
-        console.log(`[Group C] AI recommended IDs from same combination:`, recommendedIds);
+        const recommendedIds = aiRecommendationsLoader.getRecommendations(productId, aiCategory, product.gender);
+        console.log(`[Group C] AI recommended IDs from same combination (${product.gender}):`, recommendedIds);
 
         if (recommendedIds && recommendedIds.length > 0) {
           // Find products by their numeric IDs - get exactly 3 items from the SAME AI combination

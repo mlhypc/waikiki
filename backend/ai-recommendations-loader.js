@@ -4,10 +4,18 @@ const path = require('path');
 class AIRecommendationsLoader {
   constructor() {
     this.recommendations = {
-      alt: null,
-      ayakkabi: null,
-      dis: null,
-      ust: null
+      kadin: {
+        alt: null,
+        ayakkabi: null,
+        dis: null,
+        ust: null
+      },
+      erkek: {
+        alt: null,
+        ayakkabi: null,
+        dis: null,
+        ust: null
+      }
     };
     this.loaded = false;
   }
@@ -18,22 +26,36 @@ class AIRecommendationsLoader {
     try {
       const recommendationsPath = path.join(__dirname, 'ai-recommendations');
 
-      // Load all recommendation files
-      this.recommendations.alt = JSON.parse(
+      // Load all recommendation files for Kadın
+      this.recommendations.kadin.alt = JSON.parse(
         fs.readFileSync(path.join(recommendationsPath, 'kadın_alt.json'), 'utf8')
       );
-      this.recommendations.ayakkabi = JSON.parse(
+      this.recommendations.kadin.ayakkabi = JSON.parse(
         fs.readFileSync(path.join(recommendationsPath, 'kadın_ayakkabi.json'), 'utf8')
       );
-      this.recommendations.dis = JSON.parse(
+      this.recommendations.kadin.dis = JSON.parse(
         fs.readFileSync(path.join(recommendationsPath, 'kadın_dis.json'), 'utf8')
       );
-      this.recommendations.ust = JSON.parse(
+      this.recommendations.kadin.ust = JSON.parse(
         fs.readFileSync(path.join(recommendationsPath, 'kadın_ust.json'), 'utf8')
       );
 
+      // Load all recommendation files for Erkek
+      this.recommendations.erkek.alt = JSON.parse(
+        fs.readFileSync(path.join(recommendationsPath, 'erkek_alt.json'), 'utf8')
+      );
+      this.recommendations.erkek.ayakkabi = JSON.parse(
+        fs.readFileSync(path.join(recommendationsPath, 'erkek_ayakkabi.json'), 'utf8')
+      );
+      this.recommendations.erkek.dis = JSON.parse(
+        fs.readFileSync(path.join(recommendationsPath, 'erkek_dis.json'), 'utf8')
+      );
+      this.recommendations.erkek.ust = JSON.parse(
+        fs.readFileSync(path.join(recommendationsPath, 'erkek_ust.json'), 'utf8')
+      );
+
       this.loaded = true;
-      console.log('✅ AI Recommendations loaded successfully');
+      console.log('✅ AI Recommendations loaded successfully (Kadın & Erkek)');
     } catch (error) {
       console.error('❌ Failed to load AI recommendations:', error.message);
       this.loaded = false;
@@ -44,9 +66,10 @@ class AIRecommendationsLoader {
    * Get AI-powered recommendations for a product
    * @param {string} productId - The product ID to get recommendations for
    * @param {string} category - The product category (alt, ayakkabi, dis, ust)
+   * @param {string} gender - The product gender (Kadın, Erkek)
    * @returns {Array} Array of product IDs from the SAME combination (3 items)
    */
-  getRecommendations(productId, category) {
+  getRecommendations(productId, category, gender = 'Kadın') {
     if (!this.loaded) {
       console.warn('AI Recommendations not loaded yet');
       return [];
@@ -58,8 +81,11 @@ class AIRecommendationsLoader {
       return [];
     }
 
-    // Get recommendations based on category
-    const categoryRecommendations = this.recommendations[category];
+    // Normalize gender to lowercase for object key
+    const genderKey = gender.toLowerCase() === 'erkek' ? 'erkek' : 'kadin';
+
+    // Get recommendations based on gender and category
+    const categoryRecommendations = this.recommendations[genderKey]?.[category];
     if (!categoryRecommendations || !categoryRecommendations[numericId]) {
       return [];
     }
