@@ -30,7 +30,7 @@ export default function SurveyModal({ onSubmit }: SurveyModalProps) {
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-5 sm:p-7">
         {/* Progress indicator */}
         <div className="flex justify-center gap-2 mb-6">
-          {[1, 2, 3].map((s) => (
+          {[1, 2, 3, 4].map((s) => (
             <div
               key={s}
               className={`h-2 w-12 rounded-full transition-all ${
@@ -56,25 +56,6 @@ export default function SurveyModal({ onSubmit }: SurveyModalProps) {
               </p>
               <p>
                 Katkılarınız, projemizin başarısı için büyük önem taşımaktadır. Teşekkür ederiz!
-              </p>
-
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
-                <h3 className="font-semibold text-gray-800 mb-2">Deney Adımları</h3>
-                <ol className="space-y-1 list-decimal list-inside">
-                  <li className="leading-relaxed">
-                    <strong>Anket:</strong> Kısa soruları yanıtlayınız.
-                  </li>
-                  <li className="leading-relaxed">
-                    <strong>Simülasyon:</strong> Websitesine yönlendirileceksiniz. Lütfen her kategoriden en az bir (1) ürün sepetinize ekleyiniz.
-                  </li>
-                  <li className="leading-relaxed">
-                    <strong>Simülasyon Sonu:</strong> Sepetteki "Simülasyonu Bitir" butonuna tıkladığınızda deney sona erecektir.
-                  </li>
-                </ol>
-              </div>
-
-              <p className="text-center text-xs sm:text-sm italic text-gray-600 mt-2">
-                Verileriniz gizlidir ve yalnızca akademik araştırma amacıyla kullanılacaktır.
               </p>
             </div>
             <button
@@ -194,13 +175,36 @@ export default function SurveyModal({ onSubmit }: SurveyModalProps) {
             </div>
 
             <button
-              onClick={handleSubmit}
+              onClick={handleNext}
               disabled={!canProceedStep3}
               className={`w-full mt-6 py-3 px-6 rounded-lg font-semibold transition-all ${
                 canProceedStep3
-                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
+            >
+              Devam Et
+            </button>
+          </div>
+        )}
+
+        {/* Step 4: Instructions */}
+        {step === 4 && (
+          <div className="text-center">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
+              Deney Adımları
+            </h2>
+            <div className="text-gray-700 text-sm sm:text-base mb-3 space-y-2 text-left">
+              <p className="leading-relaxed">
+                <strong>-</strong> Websitesine yönlendirileceksiniz. Lütfen her kategoriden en az bir (1) ürün sepetinize ekleyiniz
+              </p>
+              <p className="leading-relaxed">
+                <strong>-</strong> Sepetteki "Simülasyonu Bitir" butonuna tıkladığınızda deney sona erecektir.
+              </p>
+            </div>
+            <button
+              onClick={handleSubmit}
+              className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-semibold transition-all"
             >
               Simülasyona Başla
             </button>
