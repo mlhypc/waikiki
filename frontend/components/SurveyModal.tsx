@@ -46,16 +46,17 @@ export default function SurveyModal({ onSubmit }: SurveyModalProps) {
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
             Online Alışveriş Deneyimi Simülasyonuna Hoş Geldiniz!
             </h2>
-            <div className="text-gray-700 text-sm sm:text-base mb-4 space-y-4 text-left">
+            <div className="text-gray-700 text-sm sm:text-base mb-3 space-y-2 text-left">
               <p className="leading-relaxed">
                 <strong>Değerli Katılımcı,</strong>
               </p>
               <p className="leading-relaxed">
-                Bu çalışma, İstanbul Teknik Üniversitesi (İTÜ) bünyesinde yürütülen bir bitirme projesi kapsamında,
+                Bu çalışma, İstanbul Teknik Üniversitesi bünyesinde yürütülen bir bitirme projesi kapsamında,
                 online alışveriş deneyimini iyileştirmek amacıyla hazırlanmıştır.
+                Katkılarınız, projemizin başarısı için büyük önem taşımaktadır. Teşekkür ederiz!
               </p>
-
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+              
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
                 <h3 className="font-semibold text-gray-800 mb-3">Deney Adımları</h3>
                 <ol className="space-y-2 list-decimal list-inside">
                   <li className="leading-relaxed">
@@ -70,8 +71,8 @@ export default function SurveyModal({ onSubmit }: SurveyModalProps) {
                 </ol>
               </div>
 
-              <p className="text-center italic text-gray-600 mt-3">
-                Katkılarınız, projemizin başarısı için büyük önem taşımaktadır. Teşekkür ederiz!
+              <p className="text-center italic text-gray-600 mt-2">
+                Verileriniz gizlidir ve yalnızca akademik araştırma amacıyla kullanılacaktır.
               </p>
             </div>
             <button
@@ -195,7 +196,7 @@ export default function SurveyModal({ onSubmit }: SurveyModalProps) {
               disabled={!canProceedStep3}
               className={`w-full mt-6 py-3 px-6 rounded-lg font-semibold transition-all ${
                 canProceedStep3
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
             >
