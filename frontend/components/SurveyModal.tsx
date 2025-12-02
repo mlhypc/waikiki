@@ -58,6 +58,11 @@ export default function SurveyModal({ onSubmit }: SurveyModalProps) {
                 Katkılarınız, projemizin başarısı için büyük önem taşımaktadır. Teşekkür ederiz!
               </p>
             </div>
+
+            <p className="text-center text-xs sm:text-sm italic text-gray-600 mb-3">
+              Verileriniz gizlidir ve yalnızca akademik araştırma amacıyla kullanılacaktır.
+            </p>
+
             <button
               onClick={handleNext}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition-all"
@@ -138,15 +143,12 @@ export default function SurveyModal({ onSubmit }: SurveyModalProps) {
         {/* Step 3: Questions - Part 2 (Frequency) */}
         {step === 3 && (
           <div>
-            <p className="text-gray-500 text-xs sm:text-sm mb-5 text-center">
-              Alışveriş sıklığınızı belirtin
-            </p>
 
             <div className="space-y-5">
               {/* Frequency */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Online Alışveriş Sıklığınız
+                  Online Alışveriş Sıklığınız Nedir?
                 </label>
                 <div className="space-y-2">
                   {[
