@@ -11,7 +11,7 @@ async function checkPhotos() {
     const products = await Product.find().limit(5);
     products.forEach(p => {
       console.log('Ürün:', p.name);
-      console.log('Fotoğraflar:', p.images?.length || 0, 'adet');
+      console.log('Fotoğraflar::', p.images?.length || 0, 'adet');
       if (p.images?.length > 0) {
         console.log('  -', p.images[0]);
       }
