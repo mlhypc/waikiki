@@ -1,0 +1,23 @@
+# Ignore uploaded images - they're hosted on Backblaze B2
+uploads/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+
+# Node modules will be installed during build
+node_modules/
+
+# Environment variables
+.env
+.env.local
+
+# Development files
+*.log
+npm-debug.log*
+.DS_Store
+
+# Git
+.git/
+.gitignore
