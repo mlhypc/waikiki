@@ -2,7 +2,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export interface User {
   userId: string;
-  abTestGroup: 'A' | 'B' | 'C' | 'D';
+  abTestGroup: 'A' | 'B' | 'C';
   balance: number;
   totalPurchases: number;
   totalSpent: number;
@@ -24,7 +24,6 @@ export interface Product {
   category: string;
   gender: string;
   images: string[];
-  image: string;
   sizes: string[];
   stock: number;
   productCode?: string;
@@ -102,11 +101,13 @@ export const getProducts = async (
   abTestGroup?: string,
   category?: string,
   page: number = 1,
-  limit: number = 20
+  limit: number = 20,
+  gender?: string
 ): Promise<PaginatedProducts> => {
   const params = new URLSearchParams();
   if (abTestGroup) params.append('abTestGroup', abTestGroup);
   if (category) params.append('category', category);
+  if (gender) params.append('gender', gender);
   params.append('page', page.toString());
   params.append('limit', limit.toString());
 

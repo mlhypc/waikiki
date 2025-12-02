@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const SOURCE_PATH = 'C:\\Users\\Qwilleran\\Desktop\\waikiki_model\\DATA_GET\\data\\0_3-data_seperated';
-const DEST_PATH = path.join(__dirname, '..', 'frontend', 'public', 'products');
+const DEST_PATH = path.join(__dirname, 'uploads', 'products');
 
 // Limit number of photos per product (set to 2, 3, or 4 as needed)
 const limit_get = 2;

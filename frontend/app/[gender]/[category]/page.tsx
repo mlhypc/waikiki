@@ -9,7 +9,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { ProductCard } from '@/components/ProductCard';
 import { useStore } from '@/lib/context';
 import { usePageTracking } from '@/hooks/useAnalytics';
-import { getCategory } from '@/lib/categories';
+import { getCategory, getGenderCategories } from '@/lib/categories';
 import { getGenderTitle } from '@/lib/utils';
 import { getProducts, Product } from '@/lib/api';
 
@@ -35,14 +35,8 @@ export default function CategoryPage() {
   const category = getCategory(gender, categoryId);
   const genderTitle = getGenderTitle(gender);
 
-  const normalizeGender = (g: string) =>
-    g.toLowerCase()
-      .replace('ı', 'i')
-      .replace('ğ', 'g')
-      .replace('ü', 'u')
-      .replace('ş', 's')
-      .replace('ö', 'o')
-      .replace('ç', 'c');
+  // Use genderTitle for API calls (Kadın, Erkek with correct Turkish characters)
+  const apiGender = genderTitle;
 
   // Sync refs with state
   useEffect(() => {
@@ -59,17 +53,13 @@ export default function CategoryPage() {
     loadingProductsRef.current = true;
 
     try {
-      const data = await getProducts(user.abTestGroup, categoryId, currentPageRef.current, 20);
+      const data = await getProducts(user.abTestGroup, categoryId, currentPageRef.current, 20, apiGender);
 
-      const filteredProducts = data.products.filter(p =>
-        normalizeGender(p.gender) === normalizeGender(gender)
-      );
-
-      if (filteredProducts.length === 0 || currentPageRef.current >= data.pagination.totalPages) {
+      if (data.products.length === 0 || currentPageRef.current >= data.pagination.totalPages) {
         setHasMore(false);
         hasMoreRef.current = false;
       } else {
-        setProducts(prev => [...prev, ...filteredProducts]);
+        setProducts(prev => [...prev, ...data.products]);
         setCurrentPage(prev => {
           const newPage = prev + 1;
           currentPageRef.current = newPage;
@@ -99,11 +89,8 @@ export default function CategoryPage() {
       hasMoreRef.current = true;
 
       try {
-        const data = await getProducts(user.abTestGroup, categoryId, 1, 20);
-        const filteredProducts = data.products.filter(p =>
-          normalizeGender(p.gender) === normalizeGender(gender)
-        );
-        setProducts(filteredProducts);
+        const data = await getProducts(user.abTestGroup, categoryId, 1, 20, apiGender);
+        setProducts(data.products);
         setCurrentPage(2);
         currentPageRef.current = 2;
         const hasMoreData = data.pagination.totalPages > 1;
@@ -180,7 +167,15 @@ export default function CategoryPage() {
           items={[
             { label: 'Ana Sayfa', href: '/' },
             { label: genderTitle, href: `/${gender}` },
-            { label: category.name }
+            {
+              label: category.name,
+              dropdownItems: getGenderCategories(gender)
+                .filter(cat => cat.id !== categoryId)
+                .map(cat => ({
+                  label: cat.name,
+                  href: `/${gender}/${cat.id}`
+                }))
+            }
           ]}
         />
 

@@ -11,8 +11,8 @@ router.post('/init', async (req, res) => {
 
     const { userId } = req.body;
 
-    // Assign to A/B test group (random distribution)
-    const groups = ['A', 'B', 'C', 'D'];
+    // Assign to A/B/C test group (random distribution)
+    const groups = ['A', 'B', 'C'];
     const abTestGroup = groups[Math.floor(Math.random() * groups.length)];
 
     // If userId provided, try to get existing user (only in survey mode)

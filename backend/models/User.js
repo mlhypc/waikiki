@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
   abTestGroup: {
     type: String,
     required: true,
-    enum: ['A', 'B', 'C', 'D'], // Support up to 4 test groups
+    enum: ['A', 'B', 'C'], // A: No suggestions, B: Classic combination, C: AI combination
     index: true
   },
   balance: {

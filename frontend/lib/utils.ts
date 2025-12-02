@@ -14,6 +14,15 @@ export function getGenderTitle(gender: string): string {
 }
 
 /**
+ * Normalizes gender string for comparison
+ * @param gender - Gender string (e.g., 'Kadın', 'kadin', 'Erkek', 'erkek')
+ * @returns Lowercase normalized gender
+ */
+export function normalizeGender(gender: string): string {
+  return gender.toLowerCase().trim();
+}
+
+/**
  * Calculates total quantity of items in cart
  * @param cart - Array of cart items
  * @returns Total quantity

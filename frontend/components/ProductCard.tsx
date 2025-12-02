@@ -39,6 +39,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, position }) =
     }
   };
 
+  // Get the first valid image from the images array and convert to backend URL
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  const validImages = product.images?.filter(img => img && img.trim() !== '' && !img.includes('undefined')) || [];
+  const imageUrl = validImages.length > 0 ? `${API_URL}${validImages[0]}` : '';
+
+  // Debug: Log first product to see what data we're getting
+  if (product.productId === 'asimetrik-yaka-buzgulu-bluz-siyah-o-5065958') {
+    console.log('DEBUG ProductCard:', {
+      productId: product.productId,
+      images: product.images,
+      validImages,
+      imageUrl
+    });
+  }
+
   return (
     <div
       onClick={handleProductClick}
@@ -51,13 +66,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, position }) =
     >
       {/* Product Image */}
       <div className="relative w-full aspect-[8/10] overflow-hidden bg-gray-50">
-        <Image
-          src={product.image}
-          alt={product.name}
-          fill
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className="object-cover"
-        />
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={product.name}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover"
+            onError={() => {
+              console.error('Image load error for product:', product.productId, imageUrl);
+            }}
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-400">
+            No image
+          </div>
+        )}
       </div>
 
       {/* Product Info */}

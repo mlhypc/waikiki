@@ -18,7 +18,16 @@
       "Bash(nul)",
       "Bash(npm uninstall:*)",
       "Bash(postcss.config.js)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(node server.js:*)",
+      "Bash(timeout 3 bash:*)",
+      "Bash(curl:*)",
+      "Bash(python:*)",
+      "Bash(timeout 2 bash:*)",
+      "Bash(timeout 4 bash:*)",
+      "Bash(timeout 1 bash:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []

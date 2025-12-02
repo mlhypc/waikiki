@@ -14,7 +14,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ productI
   const { addToCart, addToFavorites, removeFromFavorites, isFavorite } = useStore();
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [selectedSize, setSelectedSize] = useState<string>('');
+  const [validImages, setValidImages] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -23,6 +23,17 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ productI
         if (!response.ok) throw new Error('Product not found');
         const data = await response.json();
         setProduct(data.product);
+
+        // Take all valid images from API
+        const images = data.product.images || [];
+        const validImagesList = images
+          .filter((img: string) => img && img.trim() !== '' && !img.includes('undefined'));
+
+        if (validImagesList.length === 0 && data.product.image) {
+          setValidImages([data.product.image]);
+        } else {
+          setValidImages(validImagesList);
+        }
       } catch (error) {
         console.error('Failed to fetch product:', error);
       }
@@ -89,7 +100,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ productI
         <div className="min-h-screen">
           <div className="max-w-6xl mx-auto">
             {/* Back Button - right side with white background */}
-            <div className="sticky top-4 right-4 z-10 flex justify-end px-4">
+            <div className="sticky top-4 right-4 z-[70] flex justify-end px-4">
               <button
                 onClick={onClose}
                 className="bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors"
@@ -106,20 +117,26 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ productI
                 <div>
                   {/* Main Image */}
                   <div className="relative w-full aspect-[8/10] bg-gray-100 rounded-lg overflow-hidden mb-4">
-                    <Image
-                      src={product.images[selectedImageIndex] || product.image}
-                      alt={product.name}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover"
-                      priority
-                    />
+                    {validImages.length > 0 ? (
+                      <Image
+                        src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${validImages[selectedImageIndex] || validImages[0]}`}
+                        alt={product.name}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-cover"
+                        priority
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-gray-400">
+                        No image available
+                      </div>
+                    )}
                   </div>
 
                   {/* Thumbnail Images */}
-                  {product.images.length > 1 && (
+                  {validImages.length > 1 && (
                     <div className="grid grid-cols-4 gap-2">
-                      {product.images.map((img, index) => (
+                      {validImages.map((img, index) => (
                         <button
                           key={index}
                           onClick={() => setSelectedImageIndex(index)}
@@ -128,7 +145,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ productI
                           }`}
                         >
                           <Image
-                            src={img}
+                            src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${img}`}
                             alt={`${product.name} ${index + 1}`}
                             fill
                             sizes="(max-width: 768px) 25vw, 12vw"
@@ -143,29 +160,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ productI
                 {/* Product Info Section */}
                 <div>
                   <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">{product.name}</h1>
-
-
-                  {/* Sizes */}
-                  {product.sizes && product.sizes.length > 0 && (
-                    <div className="mb-6">
-                      <h3 className="text-sm font-medium text-gray-900 mb-3">Beden</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {Array.from(new Set(product.sizes)).map((size) => (
-                          <button
-                            key={size}
-                            onClick={() => setSelectedSize(size)}
-                            className={`px-4 py-2 border rounded transition-colors ${
-                              selectedSize === size
-                                ? 'border-blue-600 bg-blue-50 text-blue-600'
-                                : 'border-gray-300 hover:border-gray-400'
-                            }`}
-                          >
-                            {size}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
                   {/* Action Buttons */}
                   <div className="flex gap-3 mb-6">

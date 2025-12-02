@@ -1,6 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
+const fs = require('fs');
+const path = require('path');
+const aiRecommendationsLoader = require('../ai-recommendations-loader');
+
+console.log('🔄 Products route loaded at:', new Date().toISOString());
 
 // Get all products
 router.get('/', async (req, res) => {
@@ -27,8 +32,28 @@ router.get('/', async (req, res) => {
       Product.countDocuments(query)
     ]);
 
+    // Convert image paths to backend URLs for all products
+    const processedProducts = products.map(product => {
+      const productData = product.toObject();
+
+      if (productData.images && Array.isArray(productData.images)) {
+        productData.images = productData.images
+          .filter(img => img) // Remove null/undefined
+          .map(img => {
+            let cleanPath = img.startsWith('/') ? img.slice(1) : img;
+            // If path starts with 'products/', add 'uploads/' prefix
+            if (cleanPath.startsWith('products/')) {
+              cleanPath = 'uploads/' + cleanPath;
+            }
+            return `/${cleanPath}`;
+          });
+      }
+
+      return productData;
+    });
+
     res.json({
-      products,
+      products: processedProducts,
       pagination: {
         page: pageNum,
         limit: limitNum,
@@ -53,7 +78,40 @@ router.get('/:productId', async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    res.json({ product });
+    // Filter out images that don't exist on disk and convert to full URLs
+    const uploadsPath = process.env.UPLOADS_PATH || path.join(__dirname, '..', 'uploads');
+    const validImages = [];
+
+    if (product.images && Array.isArray(product.images)) {
+      for (const img of product.images) {
+        if (!img) continue;
+        // Handle both /products/... and /uploads/products/... formats
+        let cleanPath = img.startsWith('/') ? img.slice(1) : img;
+
+        // If path starts with 'products/', add 'uploads/' prefix
+        if (cleanPath.startsWith('products/')) {
+          cleanPath = 'uploads/' + cleanPath;
+        }
+
+        const imagePath = path.join(uploadsPath, cleanPath.replace('uploads/', ''));
+
+        try {
+          if (fs.existsSync(imagePath)) {
+            // Convert to backend URL
+            validImages.push(`/${cleanPath}`);
+          }
+        } catch (err) {
+          // Skip invalid images
+          continue;
+        }
+      }
+    }
+
+    // Return product with only valid images as backend URLs
+    const productData = product.toObject();
+    productData.images = validImages;
+
+    res.json({ product: productData });
   } catch (error) {
     console.error('Get product error:', error);
     res.status(500).json({ error: 'Failed to get product' });
@@ -78,12 +136,13 @@ router.get('/suggestions/:productId', async (req, res) => {
 
     let suggestions = [];
 
-    // Group A: No suggestions
+    // Group A: No suggestions (control group)
     if (abTestGroup === 'A') {
       suggestions = [];
     }
-    // Group B: Random suggestions from combinationSuggestions
+    // Group B: Classic combination suggestions
     else if (abTestGroup === 'B' && product.combinationSuggestions && product.combinationSuggestions.length > 0) {
+      console.log(`[Group B] Product ${productId} has ${product.combinationSuggestions.length} combinations`);
       const randomCombo = product.combinationSuggestions[
         Math.floor(Math.random() * product.combinationSuggestions.length)
       ];
@@ -102,30 +161,65 @@ router.get('/suggestions/:productId', async (req, res) => {
           .filter(Boolean)
           .slice(1, 5); // Skip first item (it's the current product)
 
+        console.log(`[Group B] Extracted product IDs:`, productIds);
         suggestions = await Product.find({
           productId: { $in: productIds }
         }).limit(4);
+        console.log(`[Group B] Found ${suggestions.length} suggestions`);
       }
     }
-    // Group C: AI suggestions (to be implemented)
+    // Group C: AI-powered combination suggestions
     else if (abTestGroup === 'C') {
-      // For now, use related products as placeholder
-      if (product.relatedProducts && product.relatedProducts.length > 0) {
+      console.log(`[Group C] Product ${productId}, category: ${product.category}`);
+      // Map product category to AI recommendation category
+      const aiCategory = aiRecommendationsLoader.mapCategory(product.category);
+      console.log(`[Group C] Mapped to AI category: ${aiCategory}`);
+
+      if (aiCategory) {
+        // Get AI-powered recommendations
+        const recommendedIds = aiRecommendationsLoader.getRecommendations(productId, aiCategory);
+        console.log(`[Group C] AI recommended IDs:`, recommendedIds);
+
+        if (recommendedIds && recommendedIds.length > 0) {
+          // Find products by their numeric IDs
+          suggestions = await Product.find({
+            productId: { $regex: new RegExp(recommendedIds.map(id => `${id}$`).join('|')) }
+          }).limit(4);
+          console.log(`[Group C] Found ${suggestions.length} AI suggestions`);
+        }
+      }
+
+      // Fallback to related products if AI recommendations not available
+      if (suggestions.length === 0 && product.relatedProducts && product.relatedProducts.length > 0) {
+        console.log(`[Group C] Falling back to relatedProducts`);
         const relatedIds = product.relatedProducts.slice(0, 4);
         suggestions = await Product.find({
           productId: { $in: relatedIds }
         }).limit(4);
+        console.log(`[Group C] Found ${suggestions.length} related product suggestions`);
       }
     }
-    // Group D: Related products (control group)
-    else if (abTestGroup === 'D' && product.relatedProducts && product.relatedProducts.length > 0) {
-      const relatedIds = product.relatedProducts.slice(0, 4);
-      suggestions = await Product.find({
-        productId: { $in: relatedIds }
-      }).limit(4);
-    }
 
-    res.json({ suggestions });
+    // Process image paths for suggestions
+    const processedSuggestions = suggestions.map(suggestion => {
+      const suggestionData = suggestion.toObject();
+
+      if (suggestionData.images && Array.isArray(suggestionData.images)) {
+        suggestionData.images = suggestionData.images
+          .filter(img => img)
+          .map(img => {
+            let cleanPath = img.startsWith('/') ? img.slice(1) : img;
+            if (cleanPath.startsWith('products/')) {
+              cleanPath = 'uploads/' + cleanPath;
+            }
+            return `/${cleanPath}`;
+          });
+      }
+
+      return suggestionData;
+    });
+
+    res.json({ suggestions: processedSuggestions });
   } catch (error) {
     console.error('Get suggestions error:', error);
     res.status(500).json({ error: 'Failed to get suggestions' });

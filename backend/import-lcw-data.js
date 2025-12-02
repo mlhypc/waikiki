@@ -84,19 +84,19 @@ function processProduct(infoJsonPath) {
     const discountedPrice = parseTurkishPrice(data.discounted_price);
     const finalPrice = discountedPrice || originalPrice || 0;
 
-    // Get image paths - check what's actually in the public/products folder
+    // Get image paths - check what's actually in the backend/uploads/products folder
     const images = [];
 
-    // Check the actual copied images in frontend/public/products
-    const publicProductDir = path.join(__dirname, '..', 'frontend', 'public', 'products', data.folder_name);
+    // Check the actual copied images in backend/uploads/products
+    const uploadsProductDir = path.join(__dirname, 'uploads', 'products', data.folder_name);
 
-    if (fs.existsSync(publicProductDir)) {
-      const copiedPhotos = fs.readdirSync(publicProductDir)
+    if (fs.existsSync(uploadsProductDir)) {
+      const copiedPhotos = fs.readdirSync(uploadsProductDir)
         .filter(f => f.endsWith('.jpg') || f.endsWith('.png'))
         .sort();
 
       copiedPhotos.forEach(photo => {
-        // Store relative path for frontend
+        // Store relative path for backend
         images.push(`/products/${data.folder_name}/${photo}`);
       });
     }
@@ -183,9 +183,8 @@ async function importData() {
     console.log(`\n🎉 Successfully imported ${products.length} products!`);
     console.log('\n📝 A/B Test Groups (for cart suggestions):');
     console.log('   Group A: No cart suggestions');
-    console.log('   Group B: Random suggestions (from combination data)');
+    console.log('   Group B: Regular suggestions (from combination data)');
     console.log('   Group C: AI-powered suggestions (to be implemented)');
-    console.log('   Group D: Control group');
     console.log('\n📝 Next steps:');
     console.log('   1. Run: node copy-images.js (to copy product images)');
     console.log('   2. Start backend: npm start');

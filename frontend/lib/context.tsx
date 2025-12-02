@@ -12,6 +12,7 @@ export interface CartItem {
 
 interface StoreContextType {
   user: User | null;
+  setUser: (user: User) => void;
   sessionId: string;
   cart: CartItem[];
   addToCart: (product: Product) => void;
@@ -303,6 +304,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     <StoreContext.Provider
       value={{
         user,
+        setUser,
         sessionId,
         cart,
         addToCart,
