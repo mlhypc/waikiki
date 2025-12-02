@@ -44,7 +44,7 @@ class AIRecommendationsLoader {
    * Get AI-powered recommendations for a product
    * @param {string} productId - The product ID to get recommendations for
    * @param {string} category - The product category (alt, ayakkabi, dis, ust)
-   * @returns {Array} Array of product IDs
+   * @returns {Array} Array of product IDs from the SAME combination (3 items)
    */
   getRecommendations(productId, category) {
     if (!this.loaded) {
@@ -64,35 +64,42 @@ class AIRecommendationsLoader {
       return [];
     }
 
-    // Get top recommendations sorted by score
-    const recommendations = categoryRecommendations[numericId]
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 4);
+    // Get the TOP combination sorted by score (just one combination)
+    const topCombination = categoryRecommendations[numericId]
+      .sort((a, b) => b.score - a.score)[0];
 
-    // Extract product IDs from the combination
+    if (!topCombination) {
+      return [];
+    }
+
+    // Extract product IDs from the SAME combination
     const productIds = [];
-    recommendations.forEach(rec => {
-      // Add different category products from the recommendation
-      if (category === 'alt') {
-        // For pants, recommend top wear and accessories
-        if (rec.ust_id) productIds.push(rec.ust_id.toString());
-        if (rec.dis_id) productIds.push(rec.dis_id.toString());
-        if (rec.ayakkabi_id) productIds.push(rec.ayakkabi_id.toString());
-      } else if (category === 'ayakkabi') {
-        // For shoes, recommend clothing items
-        if (rec.alt_id) productIds.push(rec.alt_id.toString());
-        if (rec.ust_id) productIds.push(rec.ust_id.toString());
-        if (rec.dis_id) productIds.push(rec.dis_id.toString());
-      } else if (category === 'dis') {
-        // For outerwear, recommend other items
-        if (rec.alt_id) productIds.push(rec.alt_id.toString());
-        if (rec.ust_id) productIds.push(rec.ust_id.toString());
-        if (rec.ayakkabi_id) productIds.push(rec.ayakkabi_id.toString());
-      }
-    });
 
-    // Return unique product IDs
-    return [...new Set(productIds)].slice(0, 4);
+    // Add different category products from the same recommendation
+    if (category === 'alt') {
+      // For pants, recommend top wear and accessories
+      if (topCombination.ust_id) productIds.push(topCombination.ust_id.toString());
+      if (topCombination.dis_id) productIds.push(topCombination.dis_id.toString());
+      if (topCombination.ayakkabi_id) productIds.push(topCombination.ayakkabi_id.toString());
+    } else if (category === 'ayakkabi') {
+      // For shoes, recommend clothing items
+      if (topCombination.alt_id) productIds.push(topCombination.alt_id.toString());
+      if (topCombination.ust_id) productIds.push(topCombination.ust_id.toString());
+      if (topCombination.dis_id) productIds.push(topCombination.dis_id.toString());
+    } else if (category === 'dis') {
+      // For outerwear, recommend other items
+      if (topCombination.alt_id) productIds.push(topCombination.alt_id.toString());
+      if (topCombination.ust_id) productIds.push(topCombination.ust_id.toString());
+      if (topCombination.ayakkabi_id) productIds.push(topCombination.ayakkabi_id.toString());
+    } else if (category === 'ust') {
+      // For top wear, recommend other items
+      if (topCombination.alt_id) productIds.push(topCombination.alt_id.toString());
+      if (topCombination.dis_id) productIds.push(topCombination.dis_id.toString());
+      if (topCombination.ayakkabi_id) productIds.push(topCombination.ayakkabi_id.toString());
+    }
+
+    // Return exactly 3 product IDs from the same combination
+    return productIds.slice(0, 3);
   }
 
   /**

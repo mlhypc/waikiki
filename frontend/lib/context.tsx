@@ -24,7 +24,7 @@ interface StoreContextType {
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
   showSurvey: boolean;
-  handleSurveySubmit: (age: string, gender: string) => Promise<void>;
+  handleSurveySubmit: (age: string, gender: string, frequency: string) => Promise<void>;
   favorites: Product[];
   addToFavorites: (product: Product) => void;
   removeFromFavorites: (productId: string) => void;
@@ -267,12 +267,12 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
-  const handleSurveySubmit = async (age: string, gender: string) => {
+  const handleSurveySubmit = async (age: string, gender: string, frequency: string) => {
     if (!user) return;
 
     try {
       const { submitSurvey } = await import('./api');
-      await submitSurvey(user.userId, age, gender);
+      await submitSurvey(user.userId, age, gender, frequency);
 
       // Mark survey as completed in localStorage
       localStorage.setItem('surveyCompleted', 'true');

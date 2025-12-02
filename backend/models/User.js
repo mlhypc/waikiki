@@ -25,11 +25,15 @@ const userSchema = new mongoose.Schema({
   surveyResponses: {
     age: {
       type: String,
-      enum: ['18-24', '25-34', '35-44', '45+', '']
+      enum: ['18-24', '25-34', '35-44', '45-54', '55-64', '65 yaş ve üzeri', '']
     },
     gender: {
       type: String,
-      enum: ['Kadın', 'Erkek', 'Diğer', '']
+      enum: ['Kadın', 'Erkek', '']
+    },
+    frequency: {
+      type: String,
+      enum: ['Haftada bir veya daha sık', 'Ayda bir', '2-3 ayda bir', '6 ayda bir', 'Yılda bir veya daha seyrek', 'Hiç yapmam', '']
     },
     completedAt: Date
   },

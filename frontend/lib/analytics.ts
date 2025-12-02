@@ -206,6 +206,36 @@ export class Analytics {
     });
   }
 
+  // Suggestion tracking (CRITICAL for A/B/C testing)
+  trackSuggestionView(productId: string, suggestions: any[], sourceProductId: string) {
+    this.queueEvent('suggestion_view', {
+      productId: sourceProductId,
+      suggestionCount: suggestions.length,
+      suggestions: suggestions.map(s => s.productId),
+      abTestGroup: this.abTestGroup,
+    });
+  }
+
+  trackSuggestionClick(productId: string, productName: string, sourceProductId: string, position: number) {
+    this.queueEvent('suggestion_click', {
+      productId,
+      productName,
+      sourceProductId,
+      position,
+      abTestGroup: this.abTestGroup,
+    });
+  }
+
+  trackSuggestionAddToCart(productId: string, productName: string, price: number, sourceProductId: string) {
+    this.queueEvent('suggestion_add_to_cart', {
+      productId,
+      productName,
+      price,
+      sourceProductId,
+      abTestGroup: this.abTestGroup,
+    });
+  }
+
   // Cleanup
   destroy() {
     // Track time spent on final page

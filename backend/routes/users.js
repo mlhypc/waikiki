@@ -134,12 +134,13 @@ router.patch('/:userId/survey', async (req, res) => {
 
     if (!surveyMode) {
       // In test mode, return mock response
-      const { age, gender } = req.body;
+      const { age, gender, frequency } = req.body;
       const mockUser = {
         userId: req.params.userId,
         surveyResponses: {
           age: age || '',
           gender: gender || '',
+          frequency: frequency || '',
           completedAt: new Date()
         }
       };
@@ -147,7 +148,7 @@ router.patch('/:userId/survey', async (req, res) => {
     }
 
     const { userId } = req.params;
-    const { age, gender } = req.body;
+    const { age, gender, frequency } = req.body;
 
     const user = await User.findOne({ userId });
     if (!user) {
@@ -157,6 +158,7 @@ router.patch('/:userId/survey', async (req, res) => {
     user.surveyResponses = {
       age: age || '',
       gender: gender || '',
+      frequency: frequency || '',
       completedAt: new Date()
     };
 

@@ -10,7 +10,7 @@ import { ProductCard } from './ProductCard';
 const SURVEY_MODE = process.env.NEXT_PUBLIC_SURVEY_MODE === 'true';
 
 export const Cart: React.FC = () => {
-  const { cart, addToCart, removeFromCart, cartTotal, checkout, user, isCartOpen, setIsCartOpen, setUser } = useStore();
+  const { cart, removeFromCart, cartTotal, checkout, user, isCartOpen, setIsCartOpen, setUser } = useStore();
   const analytics = useAnalytics();
   const [suggestions, setSuggestions] = useState<Record<string, Product[]>>({});
 
@@ -78,6 +78,15 @@ export const Cart: React.FC = () => {
               const suggestionsData = await getSuggestions(item.product.productId, user.abTestGroup);
               if (suggestionsData.length > 0) {
                 newSuggestions[item.product.productId] = suggestionsData;
+
+                // Track suggestion view
+                if (analytics) {
+                  analytics.trackSuggestionView(
+                    item.product.productId,
+                    suggestionsData,
+                    item.product.productId
+                  );
+                }
               }
             } catch (error) {
               console.error(`Failed to fetch suggestions for ${item.product.productId}:`, error);
@@ -93,11 +102,11 @@ export const Cart: React.FC = () => {
     };
 
     fetchAllSuggestions();
-  }, [isCartOpen, cart, user?.abTestGroup]);
+  }, [isCartOpen, cart, user?.abTestGroup, analytics]);
 
   const getSuggestionTitle = () => {
-    if (user?.abTestGroup === 'B') return 'Klasik Kombinasyon';
-    if (user?.abTestGroup === 'C') return 'AI Önerileri';
+    if (user?.abTestGroup === 'B') return 'Sizin için seçtiklerimiz';
+    if (user?.abTestGroup === 'C') return 'Sizin için özel seçtiklerimiz';
     return '';
   };
 
@@ -171,11 +180,11 @@ export const Cart: React.FC = () => {
                   <>
                     <div className="space-y-6 mb-6">
                       {cart.map((item) => (
-                        <div key={item.product.productId}>
+                        <div key={item.product.productId} className="border border-black border-opacity-20 rounded-lg overflow-hidden">
                           {/* Product Item */}
-                          <div className="border rounded-lg p-3 flex gap-3 items-center">
+                          <div className="p-3 md:p-5 flex gap-3 md:gap-5 items-center bg-white border-2 border-opacity-50 border-gray-500 rounded-md">
                             {/* Product Image */}
-                            <div className="relative w-16 h-20 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
+                            <div className="relative w-20 h-24 md:w-28 md:h-36 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
                               <Image
                                 src={(() => {
                                   const img = item.product.images?.[0] || '/placeholder.jpg';
@@ -183,51 +192,52 @@ export const Cart: React.FC = () => {
                                 })()}
                                 alt={item.product.name}
                                 fill
-                                sizes="64px"
+                                sizes="(max-width: 768px) 80px, 112px"
                                 className="object-cover"
                               />
                             </div>
 
                             {/* Product Info */}
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-sm truncate">{item.product.name}</h3>
-                              <p className="text-xs text-gray-600 mt-0.5">
-                                Adet: {item.quantity}
+                              <h3 className="font-semibold text-sm md:text-lg leading-tight">{item.product.name}</h3>
+                              <p className="text-xs md:text-sm text-gray-500 mt-1 md:mt-1.5">
+                                {item.product.productCode && `${item.product.productCode}`}
+                                {item.product.productCode && item.product.properties?.Renk && ' - '}
+                                {item.product.properties?.Renk}
                               </p>
                             </div>
 
-                            {/* Quantity Controls */}
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <button
-                                onClick={() => removeFromCart(item.product.productId)}
-                                className="text-gray-600 hover:text-red-600 transition-colors"
-                                aria-label="Azalt"
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                                </svg>
-                              </button>
-                              <button
-                                onClick={() => addToCart(item.product)}
-                                className="text-gray-600 hover:text-green-600 transition-colors"
-                                aria-label="Arttır"
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                </svg>
-                              </button>
-                            </div>
+                            {/* Delete Button */}
+                            <button
+                              onClick={() => removeFromCart(item.product.productId)}
+                              className="text-gray-400 hover:text-red-600 transition-colors p-2 flex-shrink-0"
+                              aria-label="Sepetten Çıkar"
+                            >
+                              <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
                           </div>
 
                           {/* Suggestions for this product */}
                           {suggestions[item.product.productId] && suggestions[item.product.productId].length > 0 && (
-                            <div className="mt-3 pl-4">
-                              <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                            <div className="border-t border-dashed border-gray-300 bg-gray-50/50 px-2 py-2 md:px-4 md:py-3">
+                              <h4 className="text-[10px] md:text-xs font-semibold text-gray-500 mb-1.5 md:mb-2">
                                 {getSuggestionTitle()}
                               </h4>
-                              <div className="grid grid-cols-2 gap-2">
-                                {suggestions[item.product.productId].slice(0, 4).map((product) => (
-                                  <ProductCard key={product.productId} product={product} position={0} />
+                              <div className="grid grid-cols-3 gap-1 md:gap-1.5 opacity-90">
+                                {(user?.abTestGroup === 'C'
+                                  ? [...suggestions[item.product.productId]].reverse()
+                                  : suggestions[item.product.productId]
+                                ).slice(0, 3).map((product, idx) => (
+                                  <ProductCard
+                                    key={product.productId}
+                                    product={product}
+                                    position={idx}
+                                    compact={true}
+                                    isSuggestion={true}
+                                    sourceProductId={item.product.productId}
+                                  />
                                 ))}
                               </div>
                             </div>
@@ -240,7 +250,7 @@ export const Cart: React.FC = () => {
                       <button
                         onClick={handleCheckout}
                         disabled={!user}
-                        className="w-full bg-black text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-base"
+                        className="w-full bg-black text-white py-2.5 md:py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm md:text-base"
                       >
                         Satın Al
                       </button>

@@ -67,6 +67,7 @@ async function uploadAllImages() {
     console.log(`📦 Found ${productFolders.length} product folders\n`);
 
     let uploadedCount = 0;
+    let skippedCount = 0;
     let updatedProducts = 0;
 
     for (const folderName of productFolders) {
@@ -76,6 +77,22 @@ async function uploadAllImages() {
         .sort();
 
       if (photos.length === 0) continue;
+
+      // Check if product already has B2 URLs
+      const existingProduct = await Product.findOne({ folderName: folderName });
+
+      if (existingProduct && existingProduct.images && existingProduct.images.length > 0) {
+        // Check if images are already B2 URLs (start with https://)
+        const hasB2Urls = existingProduct.images.some(img =>
+          img && (img.startsWith('https://f003.backblazeb2.com') || img.startsWith('http://'))
+        );
+
+        if (hasB2Urls) {
+          console.log(`⏭️  Skipping: ${folderName} (already uploaded)`);
+          skippedCount++;
+          continue;
+        }
+      }
 
       console.log(`📸 Processing: ${folderName} (${photos.length} photos)`);
 
@@ -120,6 +137,7 @@ async function uploadAllImages() {
 
     console.log(`\n\n🎉 Upload completed!`);
     console.log(`📸 Uploaded ${uploadedCount} images`);
+    console.log(`⏭️  Skipped ${skippedCount} products (already uploaded)`);
     console.log(`📦 Updated ${updatedProducts} products in MongoDB`);
     console.log(`\n🌐 Images are now accessible from Backblaze B2 CDN`);
 

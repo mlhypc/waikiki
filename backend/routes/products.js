@@ -32,7 +32,7 @@ router.get('/', async (req, res) => {
       Product.countDocuments(query)
     ]);
 
-    // Process images - keep B2 URLs as-is, convert local paths to backend URLs
+    // Process images - convert B2 URLs to local paths for localhost
     const processedProducts = products.map(product => {
       const productData = product.toObject();
 
@@ -40,9 +40,14 @@ router.get('/', async (req, res) => {
         productData.images = productData.images
           .filter(img => img) // Remove null/undefined
           .map(img => {
-            // If it's already a full URL (B2 CDN), keep it as-is
+            // If it's a B2 CDN URL, convert to local path
             if (img.startsWith('http://') || img.startsWith('https://')) {
-              return img;
+              // Extract path from B2 URL: https://f003.backblazeb2.com/file/waikikiphotos/products/...
+              const match = img.match(/\/products\/(.+)/);
+              if (match) {
+                return `/uploads/products/${match[1]}`;
+              }
+              return img; // Keep as-is if pattern doesn't match
             }
 
             // Handle local paths
@@ -84,34 +89,41 @@ router.get('/:productId', async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    // Process images - keep B2 URLs as-is, convert local paths to backend URLs
+    // Process images - convert B2 URLs to local paths for localhost
     const validImages = [];
 
     if (product.images && Array.isArray(product.images)) {
       for (const img of product.images) {
         if (!img) continue;
 
-        // If it's already a full URL (B2 CDN), keep it as-is
+        let localPath;
+
+        // If it's a B2 CDN URL, convert to local path
         if (img.startsWith('http://') || img.startsWith('https://')) {
-          validImages.push(img);
-          continue;
-        }
-
-        // Handle local paths
-        let cleanPath = img.startsWith('/') ? img.slice(1) : img;
-
-        // If path starts with 'products/', add 'uploads/' prefix
-        if (cleanPath.startsWith('products/')) {
-          cleanPath = 'uploads/' + cleanPath;
+          // Extract path from B2 URL: https://f003.backblazeb2.com/file/waikikiphotos/products/...
+          const match = img.match(/\/products\/(.+)/);
+          if (match) {
+            localPath = `uploads/products/${match[1]}`;
+          } else {
+            continue; // Skip if pattern doesn't match
+          }
+        } else {
+          // Handle local paths
+          let cleanPath = img.startsWith('/') ? img.slice(1) : img;
+          // If path starts with 'products/', add 'uploads/' prefix
+          if (cleanPath.startsWith('products/')) {
+            cleanPath = 'uploads/' + cleanPath;
+          }
+          localPath = cleanPath;
         }
 
         const uploadsPath = process.env.UPLOADS_PATH || path.join(__dirname, '..', 'uploads');
-        const imagePath = path.join(uploadsPath, cleanPath.replace('uploads/', ''));
+        const imagePath = path.join(uploadsPath, localPath.replace('uploads/', ''));
 
         try {
           if (fs.existsSync(imagePath)) {
             // Convert to backend URL
-            validImages.push(`/${cleanPath}`);
+            validImages.push(`/${localPath}`);
           }
         } catch (err) {
           // Skip invalid images
@@ -161,7 +173,7 @@ router.get('/suggestions/:productId', async (req, res) => {
       ];
 
       if (randomCombo && randomCombo.products) {
-        // Extract productId from URL
+        // Extract productId from URL - get OTHER items from the same combination (exclude current product)
         const productIds = randomCombo.products
           .map(p => {
             if (p.productId) return p.productId;
@@ -172,13 +184,14 @@ router.get('/suggestions/:productId', async (req, res) => {
             return null;
           })
           .filter(Boolean)
-          .slice(1, 5); // Skip first item (it's the current product)
+          .filter(id => id !== productId) // Exclude current product
+          .slice(0, 6); // Get 6 IDs as backup
 
-        console.log(`[Group B] Extracted product IDs:`, productIds);
+        console.log(`[Group B] Extracted product IDs from same combination:`, productIds);
         suggestions = await Product.find({
           productId: { $in: productIds }
-        }).limit(4);
-        console.log(`[Group B] Found ${suggestions.length} suggestions`);
+        }).limit(3); // Show only first 3 available products
+        console.log(`[Group B] Found ${suggestions.length} suggestions from same combination`);
       }
     }
     // Group C: AI-powered combination suggestions
@@ -189,31 +202,35 @@ router.get('/suggestions/:productId', async (req, res) => {
       console.log(`[Group C] Mapped to AI category: ${aiCategory}`);
 
       if (aiCategory) {
-        // Get AI-powered recommendations
+        // Get AI-powered recommendations - returns a single combination's items
         const recommendedIds = aiRecommendationsLoader.getRecommendations(productId, aiCategory);
-        console.log(`[Group C] AI recommended IDs:`, recommendedIds);
+        console.log(`[Group C] AI recommended IDs from same combination:`, recommendedIds);
 
         if (recommendedIds && recommendedIds.length > 0) {
-          // Find products by their numeric IDs
+          // Find products by their numeric IDs - get exactly 3 items from the SAME AI combination
           suggestions = await Product.find({
             productId: { $regex: new RegExp(recommendedIds.map(id => `${id}$`).join('|')) }
-          }).limit(4);
-          console.log(`[Group C] Found ${suggestions.length} AI suggestions`);
+          }).limit(3);
+          // Reverse order for Group C: [1,2,3] -> [3,2,1]
+          suggestions.reverse();
+          console.log(`[Group C] Found ${suggestions.length} AI suggestions from same combination (reversed)`);
         }
       }
 
       // Fallback to related products if AI recommendations not available
       if (suggestions.length === 0 && product.relatedProducts && product.relatedProducts.length > 0) {
         console.log(`[Group C] Falling back to relatedProducts`);
-        const relatedIds = product.relatedProducts.slice(0, 4);
+        const relatedIds = product.relatedProducts.slice(0, 3);
         suggestions = await Product.find({
           productId: { $in: relatedIds }
-        }).limit(4);
-        console.log(`[Group C] Found ${suggestions.length} related product suggestions`);
+        }).limit(3);
+        // Reverse order for Group C fallback as well
+        suggestions.reverse();
+        console.log(`[Group C] Found ${suggestions.length} related product suggestions (reversed)`);
       }
     }
 
-    // Process image paths for suggestions
+    // Process image paths for suggestions - convert B2 URLs to local paths
     const processedSuggestions = suggestions.map(suggestion => {
       const suggestionData = suggestion.toObject();
 
@@ -221,6 +238,17 @@ router.get('/suggestions/:productId', async (req, res) => {
         suggestionData.images = suggestionData.images
           .filter(img => img)
           .map(img => {
+            // If it's a B2 CDN URL, convert to local path
+            if (img.startsWith('http://') || img.startsWith('https://')) {
+              // Extract path from B2 URL: https://f003.backblazeb2.com/file/waikikiphotos/products/...
+              const match = img.match(/\/products\/(.+)/);
+              if (match) {
+                return `/uploads/products/${match[1]}`;
+              }
+              return img; // Keep as-is if pattern doesn't match
+            }
+
+            // Handle local paths
             let cleanPath = img.startsWith('/') ? img.slice(1) : img;
             if (cleanPath.startsWith('products/')) {
               cleanPath = 'uploads/' + cleanPath;

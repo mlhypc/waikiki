@@ -9,6 +9,7 @@ export interface User {
   surveyResponses?: {
     age: string;
     gender: string;
+    frequency: string;
     completedAt: Date;
   };
 }
@@ -75,12 +76,13 @@ export const updateUserBalance = async (
 export const submitSurvey = async (
   userId: string,
   age: string,
-  gender: string
+  gender: string,
+  frequency: string
 ): Promise<User> => {
   const response = await fetch(`${API_URL}/api/users/${userId}/survey`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ age, gender }),
+    body: JSON.stringify({ age, gender, frequency }),
   });
   const data = await response.json();
   return data.user;
