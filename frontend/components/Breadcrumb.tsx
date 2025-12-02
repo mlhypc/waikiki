@@ -63,7 +63,7 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
 
                   {isOpen && (
                     <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-2 whitespace-nowrap">
-                      {item.dropdownItems.map((dropdownItem, idx) => (
+                      {item.dropdownItems?.map((dropdownItem, idx) => (
                         <Link
                           key={idx}
                           href={dropdownItem.href}
