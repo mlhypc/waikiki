@@ -11,9 +11,29 @@ router.post('/init', async (req, res) => {
 
     const { userId } = req.body;
 
-    // Assign to A/B/C test group (random distribution)
+    // Assign to A/B/C test group (uniform distribution using round-robin)
     const groups = ['A', 'B', 'C'];
-    const abTestGroup = groups[Math.floor(Math.random() * groups.length)];
+    let abTestGroup;
+
+    if (surveyMode) {
+      // Count existing users per group to ensure balanced distribution
+      const groupCounts = await User.aggregate([
+        { $group: { _id: '$abTestGroup', count: { $sum: 1 } } }
+      ]);
+
+      const counts = { A: 0, B: 0, C: 0 };
+      groupCounts.forEach(({ _id, count }) => {
+        counts[_id] = count;
+      });
+
+      // Assign to group with least members (round-robin)
+      abTestGroup = Object.keys(counts).reduce((min, key) =>
+        counts[key] < counts[min] ? key : min
+      );
+    } else {
+      // Random for test mode
+      abTestGroup = groups[Math.floor(Math.random() * groups.length)];
+    }
 
     // If userId provided, try to get existing user (only in survey mode)
     if (surveyMode && userId) {
