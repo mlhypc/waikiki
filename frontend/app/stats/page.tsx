@@ -28,6 +28,20 @@ interface Stats {
     total: number;
     byType: Record<string, number>;
   };
+  metrics: {
+    simulationDuration: {
+      averageSeconds: number;
+      minSeconds: number;
+      maxSeconds: number;
+      averageFormatted: string;
+    };
+    interactions: {
+      productViews: number;
+      productClicks: number;
+      avgProductViewsPerUser: string;
+      avgProductClicksPerUser: string;
+    };
+  };
   abTest: {
     suggestionViews: Record<string, number>;
     suggestionClicks: Record<string, number>;
@@ -67,6 +81,39 @@ export default function StatsPage() {
       setError(err instanceof Error ? err.message : 'Failed to load stats');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExport = async (format: 'csv' | 'json') => {
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${API_URL}/api/stats/export?format=${format}`);
+      if (!response.ok) throw new Error('Failed to export data');
+
+      if (format === 'csv') {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `waikiki-study-export-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        const data = await response.json();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `waikiki-study-export-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (err) {
+      alert('Export failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
     }
   };
 
@@ -139,12 +186,24 @@ export default function StatsPage() {
               >
                 Refresh Now
               </button>
+              <button
+                onClick={() => handleExport('csv')}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
+              >
+                📥 Export CSV
+              </button>
+              <button
+                onClick={() => handleExport('json')}
+                className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm"
+              >
+                📥 Export JSON
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-green-50 border border-green-200 rounded-lg p-6">
             <h3 className="text-sm font-semibold text-green-800 mb-2">New Users (24h)</h3>
             <p className="text-3xl font-bold text-green-600">{stats.recentActivity.last24Hours.newUsers}</p>
@@ -152,6 +211,23 @@ export default function StatsPage() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
             <h3 className="text-sm font-semibold text-blue-800 mb-2">Events (24h)</h3>
             <p className="text-3xl font-bold text-blue-600">{stats.recentActivity.last24Hours.events}</p>
+          </div>
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
+            <h3 className="text-sm font-semibold text-purple-800 mb-2">Avg Duration</h3>
+            <p className="text-3xl font-bold text-purple-600">{stats.metrics.simulationDuration.averageFormatted}</p>
+            <p className="text-xs text-purple-600 mt-1">
+              Min: {Math.floor(stats.metrics.simulationDuration.minSeconds / 60)}m {stats.metrics.simulationDuration.minSeconds % 60}s |
+              Max: {Math.floor(stats.metrics.simulationDuration.maxSeconds / 60)}m {stats.metrics.simulationDuration.maxSeconds % 60}s
+            </p>
+          </div>
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
+            <h3 className="text-sm font-semibold text-orange-800 mb-2">Avg Interactions</h3>
+            <p className="text-2xl font-bold text-orange-600">
+              {stats.metrics.interactions.avgProductClicksPerUser} clicks
+            </p>
+            <p className="text-xs text-orange-600 mt-1">
+              {stats.metrics.interactions.avgProductViewsPerUser} views per user
+            </p>
           </div>
         </div>
 
@@ -240,6 +316,23 @@ export default function StatsPage() {
         {/* A/B/C Test Results */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h2 className="text-xl font-bold mb-4">🧪 A/B/C Test Performance</h2>
+
+          {/* Group Descriptions */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6 text-xs">
+            <div className="bg-blue-50 border border-blue-200 rounded p-3">
+              <div className="font-semibold text-blue-900 mb-1">Group A - Control</div>
+              <div className="text-blue-700">No product suggestions shown in cart</div>
+            </div>
+            <div className="bg-purple-50 border border-purple-200 rounded p-3">
+              <div className="font-semibold text-purple-900 mb-1">Group B - Classic</div>
+              <div className="text-purple-700">Random combination suggestions</div>
+            </div>
+            <div className="bg-green-50 border border-green-200 rounded p-3">
+              <div className="font-semibold text-green-900 mb-1">Group C - AI-Powered</div>
+              <div className="text-green-700">AI-curated combination suggestions</div>
+            </div>
+          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>

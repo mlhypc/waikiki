@@ -101,6 +101,32 @@ router.get('/', async (req, res) => {
       timestamp: { $gte: last24Hours }
     });
 
+    // Calculate simulation duration metrics
+    const usersWithDuration = await User.find({
+      simulationCompleted: true,
+      simulationCompletedAt: { $exists: true }
+    }).select('createdAt simulationCompletedAt');
+
+    const durations = usersWithDuration.map(u =>
+      (new Date(u.simulationCompletedAt) - new Date(u.createdAt)) / 1000 // seconds
+    );
+
+    const avgDuration = durations.length > 0
+      ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
+      : 0;
+    const minDuration = durations.length > 0 ? Math.min(...durations) : 0;
+    const maxDuration = durations.length > 0 ? Math.max(...durations) : 0;
+
+    // Additional interaction metrics
+    const productViewCount = await Event.countDocuments({
+      eventType: 'product_view',
+      userId: { $in: completedUserIds }
+    });
+    const productClickCount = await Event.countDocuments({
+      eventType: 'product_click',
+      userId: { $in: completedUserIds }
+    });
+
     // Calculate group distribution balance
     const groupDistribution = usersByGroup.reduce((acc, { _id, count }) => {
       acc[_id] = count;
@@ -194,6 +220,20 @@ router.get('/', async (req, res) => {
           newUsers: recentUsers,
           events: recentEvents
         }
+      },
+      metrics: {
+        simulationDuration: {
+          averageSeconds: avgDuration,
+          minSeconds: Math.round(minDuration),
+          maxSeconds: Math.round(maxDuration),
+          averageFormatted: `${Math.floor(avgDuration / 60)}m ${avgDuration % 60}s`
+        },
+        interactions: {
+          productViews: productViewCount,
+          productClicks: productClickCount,
+          avgProductViewsPerUser: totalUsers > 0 ? (productViewCount / totalUsers).toFixed(2) : '0',
+          avgProductClicksPerUser: totalUsers > 0 ? (productClickCount / totalUsers).toFixed(2) : '0'
+        }
       }
     });
   } catch (error) {
@@ -232,6 +272,108 @@ router.post('/reset', async (req, res) => {
   } catch (error) {
     console.error('Stats reset error:', error);
     res.status(500).json({ error: 'Failed to reset statistics' });
+  }
+});
+
+// Export data for scientific analysis (CSV format)
+router.get('/export', async (req, res) => {
+  try {
+    const { format = 'csv' } = req.query;
+
+    // Get all users who completed simulation
+    const users = await User.find({ simulationCompleted: true }).lean();
+
+    // Get all events for completed users
+    const completedUserIds = users.map(u => u.userId);
+    const events = await Event.find({ userId: { $in: completedUserIds } }).lean();
+
+    // Build user data with metrics
+    const exportData = await Promise.all(users.map(async (user) => {
+      const userEvents = events.filter(e => e.userId === user.userId);
+
+      // Calculate simulation duration (in seconds)
+      const duration = user.simulationCompletedAt && user.createdAt
+        ? Math.round((new Date(user.simulationCompletedAt) - new Date(user.createdAt)) / 1000)
+        : 0;
+
+      // Count events by type
+      const productViews = userEvents.filter(e => e.eventType === 'product_view').length;
+      const productClicks = userEvents.filter(e => e.eventType === 'product_click').length;
+      const suggestionViews = userEvents.filter(e => e.eventType === 'suggestion_view').length;
+      const suggestionClicks = userEvents.filter(e => e.eventType === 'suggestion_click').length;
+      const suggestionAddToCart = userEvents.filter(e => e.eventType === 'suggestion_add_to_cart').length;
+      const addToCart = userEvents.filter(e => e.eventType === 'add_to_cart').length;
+      const checkoutComplete = userEvents.find(e => e.eventType === 'checkout_complete');
+
+      return {
+        userId: user.userId,
+        abTestGroup: user.abTestGroup,
+        gender: user.surveyResponses?.gender || '',
+        age: user.surveyResponses?.age || '',
+        shoppingFrequency: user.surveyResponses?.frequency || '',
+        createdAt: user.createdAt,
+        completedAt: user.simulationCompletedAt,
+        durationSeconds: duration,
+        productViews,
+        productClicks,
+        suggestionViews,
+        suggestionClicks,
+        suggestionAddToCart,
+        totalAddToCart: addToCart,
+        checkoutCompleted: !!checkoutComplete,
+        totalSpent: user.totalSpent || 0,
+        totalPurchases: user.totalPurchases || 0,
+      };
+    }));
+
+    if (format === 'json') {
+      return res.json({
+        exportDate: new Date(),
+        totalUsers: exportData.length,
+        data: exportData
+      });
+    }
+
+    // CSV format (default)
+    const csvHeaders = [
+      'userId',
+      'abTestGroup',
+      'gender',
+      'age',
+      'shoppingFrequency',
+      'createdAt',
+      'completedAt',
+      'durationSeconds',
+      'productViews',
+      'productClicks',
+      'suggestionViews',
+      'suggestionClicks',
+      'suggestionAddToCart',
+      'totalAddToCart',
+      'checkoutCompleted',
+      'totalSpent',
+      'totalPurchases'
+    ];
+
+    const csvRows = exportData.map(row =>
+      csvHeaders.map(header => {
+        const value = row[header];
+        // Handle values with commas or quotes
+        if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+          return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value;
+      }).join(',')
+    );
+
+    const csv = [csvHeaders.join(','), ...csvRows].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="waikiki-study-export-${new Date().toISOString().split('T')[0]}.csv"`);
+    res.send(csv);
+  } catch (error) {
+    console.error('Export error:', error);
+    res.status(500).json({ error: 'Failed to export data' });
   }
 });
 
