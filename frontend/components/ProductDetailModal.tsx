@@ -15,6 +15,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ productI
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [validImages, setValidImages] = useState<string[]>([]);
+  const [justAdded, setJustAdded] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -83,6 +84,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ productI
 
   const handleAddToCart = () => {
     addToCart(product);
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 2000); // Reset after 2 seconds
   };
 
   const handleToggleFavorite = () => {
@@ -168,9 +171,22 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ productI
                   <div className="flex gap-3 mb-6">
                     <button
                       onClick={handleAddToCart}
-                      className="flex-1 bg-black text-white py-3 px-6 rounded font-medium hover:bg-gray-800 transition-colors"
+                      className={`flex-1 py-3 px-6 rounded font-medium transition-all ${
+                        justAdded
+                          ? 'bg-green-600 text-white'
+                          : 'bg-black text-white hover:bg-gray-800'
+                      }`}
                     >
-                      Sepete Ekle
+                      {justAdded ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Sepete Eklendi!
+                        </span>
+                      ) : (
+                        'Sepete Ekle'
+                      )}
                     </button>
                     <button
                       onClick={handleToggleFavorite}

@@ -18,6 +18,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, position, com
   const { addToFavorites, removeFromFavorites, isFavorite, setSelectedProductId, addToCart } = useStore();
   const analytics = useAnalytics();
   const hoverProps = useHoverTracking(`product-card-${product.productId}`);
+  const [justAdded, setJustAdded] = React.useState(false);
 
   const handleProductClick = () => {
     if (analytics) {
@@ -50,6 +51,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, position, com
     }
 
     addToCart(product);
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 1500); // Reset after 1.5 seconds
   };
 
   const handleProductView = () => {
@@ -115,13 +118,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, position, com
           /* Add to Cart Button for compact mode */
           <button
             onClick={handleAddToCart}
-            className="mt-1.5 w-full bg-gray-800 text-white text-[10px] md:text-xs py-1.5 md:py-2 rounded hover:bg-gray-800 transition-colors flex items-center justify-center gap-1"
+            className={`mt-1.5 w-full text-white text-[10px] md:text-xs py-1.5 md:py-2 rounded transition-all flex items-center justify-center gap-1 ${
+              justAdded ? 'bg-green-600' : 'bg-gray-800 hover:bg-gray-700'
+            }`}
             aria-label="Sepete Ekle"
           >
-            <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span>Sepete Ekle</span>
+            {justAdded ? (
+              <>
+                <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Eklendi!</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Sepete Ekle</span>
+              </>
+            )}
           </button>
         ) : (
           /* Favorite Button for normal mode */
