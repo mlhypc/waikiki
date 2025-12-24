@@ -6,27 +6,40 @@ const Event = require('../models/Event');
 // Get real-time statistics
 router.get('/', async (req, res) => {
   try {
-    // IMPORTANT: Only count users who completed the simulation
-    // Users who started but didn't finish should NOT be counted
-    const totalUsers = await User.countDocuments({ simulationCompleted: true });
-    const allUsers = await User.countDocuments(); // For debugging
+    // Check if survey mode is enabled
+    const surveyMode = process.env.SURVEY_MODE === 'true';
 
-    // Group distribution - ONLY completed simulations
-    const usersByGroup = await User.aggregate([
-      { $match: { simulationCompleted: true } },
-      { $group: { _id: '$abTestGroup', count: { $sum: 1 } } }
-    ]);
+    if (!surveyMode) {
+      return res.status(403).json({
+        error: 'Statistics are only available in survey mode',
+        mode: 'test'
+      });
+    }
 
-    // Survey completion - among those who completed simulation
-    const surveyCompleted = await User.countDocuments({
+    // IMPORTANT: Only count users who completed the survey
+    // Users who didn't complete survey should NOT be counted at all
+    const usersWithSurvey = await User.countDocuments({
+      'surveyResponses.completedAt': { $exists: true }
+    });
+
+    const totalUsers = await User.countDocuments({
       simulationCompleted: true,
       'surveyResponses.completedAt': { $exists: true }
     });
 
-    // Survey demographics - ONLY from completed simulations
-    const genderStats = await User.aggregate([
+    // Group distribution - ONLY completed simulations with survey
+    const usersByGroup = await User.aggregate([
       { $match: {
         simulationCompleted: true,
+        'surveyResponses.completedAt': { $exists: true }
+      }},
+      { $group: { _id: '$abTestGroup', count: { $sum: 1 } } }
+    ]);
+
+    // Survey demographics - ONLY from users who completed survey
+    const genderStats = await User.aggregate([
+      { $match: {
+        'surveyResponses.completedAt': { $exists: true },
         'surveyResponses.gender': { $exists: true, $ne: '' }
       }},
       { $group: { _id: '$surveyResponses.gender', count: { $sum: 1 } } }
@@ -34,7 +47,7 @@ router.get('/', async (req, res) => {
 
     const ageStats = await User.aggregate([
       { $match: {
-        simulationCompleted: true,
+        'surveyResponses.completedAt': { $exists: true },
         'surveyResponses.age': { $exists: true, $ne: '' }
       }},
       { $group: { _id: '$surveyResponses.age', count: { $sum: 1 } } }
@@ -42,15 +55,16 @@ router.get('/', async (req, res) => {
 
     const frequencyStats = await User.aggregate([
       { $match: {
-        simulationCompleted: true,
+        'surveyResponses.completedAt': { $exists: true },
         'surveyResponses.frequency': { $exists: true, $ne: '' }
       }},
       { $group: { _id: '$surveyResponses.frequency', count: { $sum: 1 } } }
     ]);
 
-    // Get userIds of completed simulations ONLY
-    const completedUserIds = await User.find({ simulationCompleted: true })
-      .distinct('userId');
+    // Get userIds of users who completed survey ONLY
+    const completedUserIds = await User.find({
+      'surveyResponses.completedAt': { $exists: true }
+    }).distinct('userId');
 
     // Event statistics - ONLY from completed simulations
     const totalEvents = await Event.countDocuments({ userId: { $in: completedUserIds } });
@@ -90,9 +104,10 @@ router.get('/', async (req, res) => {
       { $group: { _id: '$abTestGroup', count: { $sum: 1 } } }
     ]);
 
-    // Recent activity (last 24 hours) - ONLY completed simulations
+    // Recent activity (last 24 hours) - ONLY users with survey
     const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const recentUsers = await User.countDocuments({
+      'surveyResponses.completedAt': { $exists: true },
       simulationCompleted: true,
       createdAt: { $gte: last24Hours }
     });
@@ -101,8 +116,9 @@ router.get('/', async (req, res) => {
       timestamp: { $gte: last24Hours }
     });
 
-    // Calculate simulation duration metrics
+    // Calculate simulation duration metrics - ONLY users with survey
     const usersWithDuration = await User.find({
+      'surveyResponses.completedAt': { $exists: true },
       simulationCompleted: true,
       simulationCompletedAt: { $exists: true }
     }).select('createdAt simulationCompletedAt');
@@ -139,19 +155,19 @@ router.get('/', async (req, res) => {
     res.json({
       timestamp: new Date(),
       users: {
-        total: totalUsers, // Only completed simulations
-        started: allUsers, // All users (including incomplete)
+        total: totalUsers, // Only completed simulations with survey
+        started: usersWithSurvey, // All users who completed survey
         completedSimulations: totalUsers, // Same as total now
-        dropoffCount: allUsers - totalUsers, // Started but didn't finish
-        simulationCompletionRate: allUsers > 0 ? ((totalUsers / allUsers) * 100).toFixed(2) + '%' : '100%',
+        dropoffCount: usersWithSurvey - totalUsers, // Completed survey but didn't finish simulation
+        simulationCompletionRate: usersWithSurvey > 0 ? ((totalUsers / usersWithSurvey) * 100).toFixed(2) + '%' : '100%',
         byGroup: groupDistribution,
         groupBalance: {
           isBalanced,
           maxDifference: maxDiff,
           distribution: `A:${groupDistribution.A} | B:${groupDistribution.B} | C:${groupDistribution.C}`
         },
-        surveyCompleted,
-        surveyCompletionRate: totalUsers > 0 ? (surveyCompleted / totalUsers * 100).toFixed(2) + '%' : '0%',
+        surveyCompleted: usersWithSurvey,
+        surveyCompletionRate: '100%', // All counted users completed survey by definition
         demographics: {
           gender: genderStats.reduce((acc, { _id, count }) => {
             acc[_id] = count;
@@ -278,12 +294,24 @@ router.post('/reset', async (req, res) => {
 // Export data for scientific analysis (CSV format)
 router.get('/export', async (req, res) => {
   try {
+    // Check if survey mode is enabled
+    const surveyMode = process.env.SURVEY_MODE === 'true';
+
+    if (!surveyMode) {
+      return res.status(403).json({
+        error: 'Data export is only available in survey mode',
+        mode: 'test'
+      });
+    }
+
     const { format = 'csv' } = req.query;
 
-    // Get all users who completed simulation
-    const users = await User.find({ simulationCompleted: true }).lean();
+    // Get all users who completed survey (regardless of simulation completion)
+    const users = await User.find({
+      'surveyResponses.completedAt': { $exists: true }
+    }).lean();
 
-    // Get all events for completed users
+    // Get all events for users with survey
     const completedUserIds = users.map(u => u.userId);
     const events = await Event.find({ userId: { $in: completedUserIds } }).lean();
 
@@ -320,9 +348,7 @@ router.get('/export', async (req, res) => {
         suggestionClicks,
         suggestionAddToCart,
         totalAddToCart: addToCart,
-        checkoutCompleted: !!checkoutComplete,
-        totalSpent: user.totalSpent || 0,
-        totalPurchases: user.totalPurchases || 0,
+        checkoutCompleted: !!checkoutComplete
       };
     }));
 
@@ -350,9 +376,7 @@ router.get('/export', async (req, res) => {
       'suggestionClicks',
       'suggestionAddToCart',
       'totalAddToCart',
-      'checkoutCompleted',
-      'totalSpent',
-      'totalPurchases'
+      'checkoutCompleted'
     ];
 
     const csvRows = exportData.map(row =>

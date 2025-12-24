@@ -213,6 +213,14 @@ router.patch('/:userId/complete-simulation', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Check if survey is completed (in survey mode)
+    if (!user.surveyResponses?.completedAt) {
+      return res.status(400).json({
+        error: 'Survey must be completed before finishing simulation',
+        surveyCompleted: false
+      });
+    }
+
     user.simulationCompleted = true;
     user.simulationCompletedAt = new Date();
 

@@ -13,10 +13,6 @@ const userSchema = new mongoose.Schema({
     enum: ['A', 'B', 'C'], // A: No suggestions, B: Classic combination, C: AI combination
     index: true
   },
-  balance: {
-    type: Number,
-    default: 1000 // Each user starts with $1000 decoy money
-  },
   metadata: {
     userAgent: String,
     firstVisit: Date,
@@ -36,14 +32,6 @@ const userSchema = new mongoose.Schema({
       enum: ['Haftada bir veya daha sık', 'Ayda bir', '2-3 ayda bir', '6 ayda bir', 'Yılda bir veya daha seyrek', 'Hiç yapmam', '']
     },
     completedAt: Date
-  },
-  totalPurchases: {
-    type: Number,
-    default: 0
-  },
-  totalSpent: {
-    type: Number,
-    default: 0
   },
   simulationCompleted: {
     type: Boolean,

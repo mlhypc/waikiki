@@ -266,7 +266,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     try {
       const { submitSurvey } = await import('./api');
-      await submitSurvey(user.userId, age, gender, frequency);
+      const updatedUser = await submitSurvey(user.userId, age, gender, frequency);
+
+      // Update user state with survey responses
+      setUser(updatedUser);
 
       // Mark survey as completed in localStorage
       localStorage.setItem('surveyCompleted', 'true');

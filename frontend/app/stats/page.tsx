@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
+const SURVEY_MODE = process.env.NEXT_PUBLIC_SURVEY_MODE === 'true';
+
 interface Stats {
   timestamp: string;
   users: {
@@ -127,6 +129,17 @@ export default function StatsPage() {
     const interval = setInterval(fetchStats, 5000); // Refresh every 5 seconds
     return () => clearInterval(interval);
   }, [autoRefresh]);
+
+  if (!SURVEY_MODE) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-md text-center">
+          <h2 className="text-yellow-800 font-semibold mb-2">⚠️ Survey Mode Disabled</h2>
+          <p className="text-yellow-600">Statistics are only available when SURVEY_MODE is enabled.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

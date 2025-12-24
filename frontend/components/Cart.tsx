@@ -21,6 +21,12 @@ export const Cart: React.FC = () => {
   const handleCheckout = async () => {
     if (!user) return;
 
+    // Check if survey is completed (only in survey mode)
+    if (SURVEY_MODE && !user.surveyResponses?.completedAt) {
+      alert('Lütfen önce anketi tamamlayın.');
+      return;
+    }
+
     try {
       // Mark simulation as completed
       const { completeSimulation } = await import('@/lib/api');
@@ -261,7 +267,7 @@ export const Cart: React.FC = () => {
                     <div className="border-t pt-4">
                       <button
                         onClick={handleCheckout}
-                        disabled={!user}
+                        disabled={!user || (SURVEY_MODE && !user.surveyResponses?.completedAt)}
                         className="w-full bg-black text-white py-2.5 md:py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm md:text-base"
                       >
                         Simülasyonu Tamamla
