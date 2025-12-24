@@ -5,7 +5,7 @@ const SOURCE_PATH = 'C:\\Users\\Qwilleran\\Desktop\\waikiki_model\\DATA_GET\\dat
 const DEST_PATH = path.join(__dirname, 'uploads', 'products');
 
 // Limit number of photos per product (set to 2, 3, or 4 as needed)
-const limit_get = 2;
+const limit_get = 4;
 
 // Create destination directory if it doesn't exist
 function ensureDirectoryExists(dirPath) {

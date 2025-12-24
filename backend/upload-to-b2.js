@@ -81,25 +81,36 @@ async function uploadAllImages() {
       // Check if product already has B2 URLs
       const existingProduct = await Product.findOne({ folderName: folderName });
 
-      if (existingProduct && existingProduct.images && existingProduct.images.length > 0) {
-        // Check if images are already B2 URLs (start with https://)
-        const hasB2Urls = existingProduct.images.some(img =>
-          img && (img.startsWith('https://f003.backblazeb2.com') || img.startsWith('http://'))
-        );
+      // Get existing B2 URLs
+      const existingUrls = [];
+      const existingPhotoNames = new Set();
 
-        if (hasB2Urls) {
-          console.log(`⏭️  Skipping: ${folderName} (already uploaded)`);
-          skippedCount++;
-          continue;
-        }
+      if (existingProduct && existingProduct.images && existingProduct.images.length > 0) {
+        existingProduct.images.forEach(url => {
+          if (url && (url.startsWith('https://f003.backblazeb2.com') || url.startsWith('http://'))) {
+            existingUrls.push(url);
+            // Extract photo name from URL: .../photo_1.jpg -> photo_1.jpg
+            const photoName = url.split('/').pop();
+            existingPhotoNames.add(photoName);
+          }
+        });
       }
 
-      console.log(`📸 Processing: ${folderName} (${photos.length} photos)`);
+      // Filter out already uploaded photos
+      const photosToUpload = photos.filter(photo => !existingPhotoNames.has(photo));
 
-      const uploadedUrls = [];
+      if (photosToUpload.length === 0 && existingUrls.length > 0) {
+        console.log(`⏭️  Skipping: ${folderName} (all ${photos.length} photos already uploaded)`);
+        skippedCount++;
+        continue;
+      }
 
-      // Upload each photo
-      for (const photo of photos) {
+      console.log(`\n📦 Processing: ${folderName} (${photosToUpload.length} new / ${existingUrls.length} existing)`);
+
+      const uploadedUrls = [...existingUrls]; // Start with existing URLs
+
+      // Upload each new photo
+      for (const photo of photosToUpload) {
         const filePath = path.join(folderPath, photo);
         const key = `products/${folderName}/${photo}`;
 
@@ -107,13 +118,13 @@ async function uploadAllImages() {
           const url = await uploadFile(filePath, key);
           uploadedUrls.push(url);
           uploadedCount++;
-          process.stdout.write('.');
+          console.log(`  📸 Uploaded: ${photo}`);
         } catch (err) {
-          console.error(`\n❌ Error uploading ${photo}:`, err.message);
+          console.error(`  ❌ Error uploading ${photo}:`, err.message);
         }
       }
 
-      // Update MongoDB with B2 URLs
+      // Update MongoDB with all URLs (existing + new)
       try {
         const result = await Product.updateOne(
           { folderName: folderName },
@@ -132,7 +143,7 @@ async function uploadAllImages() {
         console.error(`\n❌ Error updating product ${folderName}:`, err.message);
       }
 
-      console.log(` ✅`);
+      console.log(`✅ Completed: ${folderName} (Total: ${uploadedUrls.length} photos)`);
     }
 
     console.log(`\n\n🎉 Upload completed!`);
