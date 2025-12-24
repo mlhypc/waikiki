@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
-const fs = require('fs');
-const path = require('path');
 const aiRecommendationsLoader = require('../ai-recommendations-loader');
 
 console.log('🔄 Products route loaded at:', new Date().toISOString());
@@ -32,36 +30,8 @@ router.get('/', async (req, res) => {
       Product.countDocuments(query)
     ]);
 
-    // Process images - convert B2 URLs to local paths for localhost
-    const processedProducts = products.map(product => {
-      const productData = product.toObject();
-
-      if (productData.images && Array.isArray(productData.images)) {
-        productData.images = productData.images
-          .filter(img => img) // Remove null/undefined
-          .map(img => {
-            // If it's a B2 CDN URL, convert to local path
-            if (img.startsWith('http://') || img.startsWith('https://')) {
-              // Extract path from B2 URL: https://f003.backblazeb2.com/file/waikikiphotos/products/...
-              const match = img.match(/\/products\/(.+)/);
-              if (match) {
-                return `/uploads/products/${match[1]}`;
-              }
-              return img; // Keep as-is if pattern doesn't match
-            }
-
-            // Handle local paths
-            let cleanPath = img.startsWith('/') ? img.slice(1) : img;
-            // If path starts with 'products/', add 'uploads/' prefix
-            if (cleanPath.startsWith('products/')) {
-              cleanPath = 'uploads/' + cleanPath;
-            }
-            return `/${cleanPath}`;
-          });
-      }
-
-      return productData;
-    });
+    // Return products with B2 URLs (no conversion needed for production)
+    const processedProducts = products.map(product => product.toObject());
 
     res.json({
       products: processedProducts,
@@ -89,52 +59,8 @@ router.get('/:productId', async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    // Process images - convert B2 URLs to local paths for localhost
-    const validImages = [];
-
-    if (product.images && Array.isArray(product.images)) {
-      for (const img of product.images) {
-        if (!img) continue;
-
-        let localPath;
-
-        // If it's a B2 CDN URL, convert to local path
-        if (img.startsWith('http://') || img.startsWith('https://')) {
-          // Extract path from B2 URL: https://f003.backblazeb2.com/file/waikikiphotos/products/...
-          const match = img.match(/\/products\/(.+)/);
-          if (match) {
-            localPath = `uploads/products/${match[1]}`;
-          } else {
-            continue; // Skip if pattern doesn't match
-          }
-        } else {
-          // Handle local paths
-          let cleanPath = img.startsWith('/') ? img.slice(1) : img;
-          // If path starts with 'products/', add 'uploads/' prefix
-          if (cleanPath.startsWith('products/')) {
-            cleanPath = 'uploads/' + cleanPath;
-          }
-          localPath = cleanPath;
-        }
-
-        const uploadsPath = process.env.UPLOADS_PATH || path.join(__dirname, '..', 'uploads');
-        const imagePath = path.join(uploadsPath, localPath.replace('uploads/', ''));
-
-        try {
-          if (fs.existsSync(imagePath)) {
-            // Convert to backend URL
-            validImages.push(`/${localPath}`);
-          }
-        } catch (err) {
-          // Skip invalid images
-          continue;
-        }
-      }
-    }
-
-    // Return product with only valid images as backend URLs
+    // Return product with B2 URLs (no conversion needed for production)
     const productData = product.toObject();
-    productData.images = validImages;
 
     res.json({ product: productData });
   } catch (error) {
@@ -230,35 +156,8 @@ router.get('/suggestions/:productId', async (req, res) => {
       }
     }
 
-    // Process image paths for suggestions - convert B2 URLs to local paths
-    const processedSuggestions = suggestions.map(suggestion => {
-      const suggestionData = suggestion.toObject();
-
-      if (suggestionData.images && Array.isArray(suggestionData.images)) {
-        suggestionData.images = suggestionData.images
-          .filter(img => img)
-          .map(img => {
-            // If it's a B2 CDN URL, convert to local path
-            if (img.startsWith('http://') || img.startsWith('https://')) {
-              // Extract path from B2 URL: https://f003.backblazeb2.com/file/waikikiphotos/products/...
-              const match = img.match(/\/products\/(.+)/);
-              if (match) {
-                return `/uploads/products/${match[1]}`;
-              }
-              return img; // Keep as-is if pattern doesn't match
-            }
-
-            // Handle local paths
-            let cleanPath = img.startsWith('/') ? img.slice(1) : img;
-            if (cleanPath.startsWith('products/')) {
-              cleanPath = 'uploads/' + cleanPath;
-            }
-            return `/${cleanPath}`;
-          });
-      }
-
-      return suggestionData;
-    });
+    // Return suggestions with B2 URLs (no conversion needed for production)
+    const processedSuggestions = suggestions.map(suggestion => suggestion.toObject());
 
     res.json({ suggestions: processedSuggestions });
   } catch (error) {
