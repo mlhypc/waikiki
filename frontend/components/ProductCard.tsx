@@ -110,7 +110,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, position, com
 
       {/* Product Info */}
       <div className={compact ? "p-1.5" : "p-3"}>
-        <h3 className={`text-gray-900 line-clamp-2 ${compact ? 'text-[10px] leading-tight' : 'text-xs'}`}>
+        <h3 className={`text-gray-900 line-clamp-2 overflow-hidden ${compact ? 'text-[10px] leading-[1.2] h-[2.4em]' : 'text-xs'}`}>
           {product.name}
         </h3>
 

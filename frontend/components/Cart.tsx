@@ -262,7 +262,7 @@ export const Cart: React.FC = () => {
                       <button
                         onClick={handleCheckout}
                         disabled={!user}
-                        className="w-full bg-red text-white py-2.5 md:py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm md:text-base"
+                        className="w-full bg-black text-white py-2.5 md:py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm md:text-base"
                       >
                         Simülasyonu Tamamla
                       </button>
