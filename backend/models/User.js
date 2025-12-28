@@ -9,8 +9,9 @@ const userSchema = new mongoose.Schema({
   },
   abTestGroup: {
     type: String,
-    required: true,
-    enum: ['A', 'B', 'C'], // A: No suggestions, B: Classic combination, C: AI combination
+    required: false, // Will be assigned after survey completion
+    enum: ['A', 'B', 'C', null], // A: No suggestions, B: Classic combination, C: AI combination
+    default: null,
     index: true
   },
   metadata: {

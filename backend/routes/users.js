@@ -11,29 +11,9 @@ router.post('/init', async (req, res) => {
 
     const { userId } = req.body;
 
-    // Assign to A/B/C test group (uniform distribution using round-robin)
-    const groups = ['A', 'B', 'C'];
-    let abTestGroup;
-
-    if (surveyMode) {
-      // Count existing users per group to ensure balanced distribution
-      const groupCounts = await User.aggregate([
-        { $group: { _id: '$abTestGroup', count: { $sum: 1 } } }
-      ]);
-
-      const counts = { A: 0, B: 0, C: 0 };
-      groupCounts.forEach(({ _id, count }) => {
-        counts[_id] = count;
-      });
-
-      // Assign to group with least members (round-robin)
-      abTestGroup = Object.keys(counts).reduce((min, key) =>
-        counts[key] < counts[min] ? key : min
-      );
-    } else {
-      // Random for test mode
-      abTestGroup = groups[Math.floor(Math.random() * groups.length)];
-    }
+    // Group assignment will happen after survey completion (stratified randomization)
+    // For now, all users start with null group
+    const abTestGroup = null;
 
     // If userId provided, try to get existing user (only in survey mode)
     if (surveyMode && userId) {
@@ -45,14 +25,14 @@ router.post('/init', async (req, res) => {
       }
     }
 
-    // In test mode, return a mock user without saving
+    // In test mode, return a mock user without saving (assign random group for testing)
     if (!surveyMode) {
+      const groups = ['A', 'B', 'C'];
+      const testGroup = groups[Math.floor(Math.random() * groups.length)];
+
       const mockUser = {
         userId: userId || uuidv4(),
-        abTestGroup,
-        balance: 1000,
-        totalPurchases: 0,
-        totalSpent: 0,
+        abTestGroup: testGroup,
         metadata: {
           userAgent: req.headers['user-agent'],
           firstVisit: new Date(),
@@ -175,12 +155,44 @@ router.patch('/:userId/survey', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Save survey responses
     user.surveyResponses = {
       age: age || '',
       gender: gender || '',
       frequency: frequency || '',
       completedAt: new Date()
     };
+
+    // Stratified randomization: Assign to A/B/C group based on demographics
+    // This ensures balanced distribution across demographic profiles
+
+    // Count users with same demographic profile in each group
+    const demographicCounts = await User.aggregate([
+      {
+        $match: {
+          'surveyResponses.completedAt': { $exists: true },
+          'surveyResponses.age': age,
+          'surveyResponses.gender': gender,
+          'surveyResponses.frequency': frequency,
+          abTestGroup: { $ne: null }
+        }
+      },
+      { $group: { _id: '$abTestGroup', count: { $sum: 1 } } }
+    ]);
+
+    // Build count map
+    const counts = { A: 0, B: 0, C: 0 };
+    demographicCounts.forEach(({ _id, count }) => {
+      counts[_id] = count;
+    });
+
+    // Find group(s) with minimum count
+    const minCount = Math.min(counts.A, counts.B, counts.C);
+    const candidateGroups = Object.keys(counts).filter(group => counts[group] === minCount);
+
+    // Randomly select from candidate groups (if tie) for fairness
+    const assignedGroup = candidateGroups[Math.floor(Math.random() * candidateGroups.length)];
+    user.abTestGroup = assignedGroup;
 
     await user.save();
     res.json({ user, mode: 'survey', saved: true });

@@ -138,8 +138,11 @@ export const getProduct = async (productId: string, abTestGroup?: string): Promi
   return data.product;
 };
 
-export const getSuggestions = async (productId: string, abTestGroup: string): Promise<Product[]> => {
-  const response = await fetch(`${API_URL}/api/products/suggestions/${productId}?abTestGroup=${abTestGroup}`);
+export const getSuggestions = async (productId: string, abTestGroup: string, userId?: string): Promise<Product[]> => {
+  const params = new URLSearchParams({ abTestGroup });
+  if (userId) params.append('userId', userId);
+
+  const response = await fetch(`${API_URL}/api/products/suggestions/${productId}?${params.toString()}`);
   const data = await response.json();
   return data.suggestions;
 };

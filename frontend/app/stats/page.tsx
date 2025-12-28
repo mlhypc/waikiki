@@ -86,34 +86,22 @@ export default function StatsPage() {
     }
   };
 
-  const handleExport = async (format: 'csv' | 'json') => {
+  const handleExport = async () => {
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-      const response = await fetch(`${API_URL}/api/stats/export?format=${format}`);
+      const response = await fetch(`${API_URL}/api/stats/export`);
       if (!response.ok) throw new Error('Failed to export data');
 
-      if (format === 'csv') {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `waikiki-study-export-${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } else {
-        const data = await response.json();
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `waikiki-study-export-${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }
+      const data = await response.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `waikiki-study-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
     } catch (err) {
       alert('Export failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
     }
@@ -200,16 +188,10 @@ export default function StatsPage() {
                 Refresh Now
               </button>
               <button
-                onClick={() => handleExport('csv')}
+                onClick={handleExport}
                 className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
               >
-                📥 Export CSV
-              </button>
-              <button
-                onClick={() => handleExport('json')}
-                className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm"
-              >
-                📥 Export JSON
+                📥 Export Data (JSON)
               </button>
             </div>
           </div>

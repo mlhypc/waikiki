@@ -82,7 +82,7 @@ export const Cart: React.FC = () => {
   // Fetch suggestions for each product when cart opens
   useEffect(() => {
     const fetchAllSuggestions = async () => {
-      if (!isCartOpen || !user || cart.length === 0 || user.abTestGroup === 'A') {
+      if (!isCartOpen || !user || !user.abTestGroup || cart.length === 0 || user.abTestGroup === 'A') {
         setSuggestions({});
         return;
       }
@@ -93,7 +93,7 @@ export const Cart: React.FC = () => {
         await Promise.all(
           cart.map(async (item) => {
             try {
-              const suggestionsData = await getSuggestions(item.product.productId, user.abTestGroup);
+              const suggestionsData = await getSuggestions(item.product.productId, user.abTestGroup, user.userId);
               if (suggestionsData.length > 0) {
                 newSuggestions[item.product.productId] = suggestionsData;
 

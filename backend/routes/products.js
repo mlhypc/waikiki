@@ -69,11 +69,22 @@ router.get('/:productId', async (req, res) => {
   }
 });
 
+// Simple hash function for deterministic seeding
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+}
+
 // Get cart suggestions based on user's A/B test group
 router.get('/suggestions/:productId', async (req, res) => {
   try {
     const { productId } = req.params;
-    const { abTestGroup } = req.query;
+    const { abTestGroup, userId } = req.query;
 
     if (!abTestGroup) {
       return res.status(400).json({ error: 'abTestGroup is required' });
@@ -91,12 +102,15 @@ router.get('/suggestions/:productId', async (req, res) => {
     if (abTestGroup === 'A') {
       suggestions = [];
     }
-    // Group B: Classic combination suggestions
+    // Group B: Classic combination suggestions (deterministic based on userId + productId)
     else if (abTestGroup === 'B' && product.combinationSuggestions && product.combinationSuggestions.length > 0) {
       console.log(`[Group B] Product ${productId} has ${product.combinationSuggestions.length} combinations`);
-      const randomCombo = product.combinationSuggestions[
-        Math.floor(Math.random() * product.combinationSuggestions.length)
-      ];
+
+      // Use userId + productId as seed for deterministic selection
+      const seed = userId ? hashString(userId + productId) : Math.floor(Math.random() * 1000000);
+      const index = seed % product.combinationSuggestions.length;
+
+      const randomCombo = product.combinationSuggestions[index];
 
       if (randomCombo && randomCombo.products) {
         // Extract productId from URL - get OTHER items from the same combination (exclude current product)

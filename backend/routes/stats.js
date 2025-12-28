@@ -291,7 +291,7 @@ router.post('/reset', async (req, res) => {
   }
 });
 
-// Export data for scientific analysis (CSV format)
+// Export data for scientific analysis (JSON format)
 router.get('/export', async (req, res) => {
   try {
     // Check if survey mode is enabled
@@ -304,8 +304,6 @@ router.get('/export', async (req, res) => {
       });
     }
 
-    const { format = 'csv' } = req.query;
-
     // Get all users who completed survey (regardless of simulation completion)
     const users = await User.find({
       'surveyResponses.completedAt': { $exists: true }
@@ -313,10 +311,12 @@ router.get('/export', async (req, res) => {
 
     // Get all events for users with survey
     const completedUserIds = users.map(u => u.userId);
-    const events = await Event.find({ userId: { $in: completedUserIds } }).lean();
+    const events = await Event.find({ userId: { $in: completedUserIds } })
+      .sort({ timestamp: 1 })
+      .lean();
 
-    // Build user data with metrics
-    const exportData = await Promise.all(users.map(async (user) => {
+    // Build detailed export data
+    const exportData = users.map(user => {
       const userEvents = events.filter(e => e.userId === user.userId);
 
       // Calculate simulation duration (in seconds)
@@ -324,77 +324,63 @@ router.get('/export', async (req, res) => {
         ? Math.round((new Date(user.simulationCompletedAt) - new Date(user.createdAt)) / 1000)
         : 0;
 
-      // Count events by type
-      const productViews = userEvents.filter(e => e.eventType === 'product_view').length;
-      const productClicks = userEvents.filter(e => e.eventType === 'product_click').length;
-      const suggestionViews = userEvents.filter(e => e.eventType === 'suggestion_view').length;
-      const suggestionClicks = userEvents.filter(e => e.eventType === 'suggestion_click').length;
-      const suggestionAddToCart = userEvents.filter(e => e.eventType === 'suggestion_add_to_cart').length;
-      const addToCart = userEvents.filter(e => e.eventType === 'add_to_cart').length;
-      const checkoutComplete = userEvents.find(e => e.eventType === 'checkout_complete');
+      // Extract detailed cart activities
+      const addToCartEvents = userEvents
+        .filter(e => e.eventType === 'add_to_cart')
+        .map(e => ({
+          productId: e.eventData?.productId || '',
+          productName: e.eventData?.productName || '',
+          timestamp: e.timestamp,
+          source: 'normal_page'
+        }));
+
+      const suggestionAddToCartEvents = userEvents
+        .filter(e => e.eventType === 'suggestion_add_to_cart')
+        .map(e => ({
+          productId: e.eventData?.productId || '',
+          productName: e.eventData?.productName || '',
+          sourceProductId: e.eventData?.sourceProductId || '',
+          timestamp: e.timestamp,
+          source: 'suggestion'
+        }));
+
+      // Combine all cart additions
+      const allCartAdditions = [...addToCartEvents, ...suggestionAddToCartEvents]
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
       return {
         userId: user.userId,
         abTestGroup: user.abTestGroup,
-        gender: user.surveyResponses?.gender || '',
-        age: user.surveyResponses?.age || '',
-        shoppingFrequency: user.surveyResponses?.frequency || '',
-        createdAt: user.createdAt,
-        completedAt: user.simulationCompletedAt,
-        durationSeconds: duration,
-        productViews,
-        productClicks,
-        suggestionViews,
-        suggestionClicks,
-        suggestionAddToCart,
-        totalAddToCart: addToCart,
-        checkoutCompleted: !!checkoutComplete
+        demographics: {
+          gender: user.surveyResponses?.gender || '',
+          age: user.surveyResponses?.age || '',
+          shoppingFrequency: user.surveyResponses?.frequency || ''
+        },
+        timeline: {
+          createdAt: user.createdAt,
+          surveyCompletedAt: user.surveyResponses?.completedAt,
+          simulationCompletedAt: user.simulationCompletedAt,
+          durationSeconds: duration
+        },
+        metrics: {
+          productViews: userEvents.filter(e => e.eventType === 'product_view').length,
+          productClicks: userEvents.filter(e => e.eventType === 'product_click').length,
+          suggestionViews: userEvents.filter(e => e.eventType === 'suggestion_view').length,
+          suggestionClicks: userEvents.filter(e => e.eventType === 'suggestion_click').length,
+          normalAddToCart: addToCartEvents.length,
+          suggestionAddToCart: suggestionAddToCartEvents.length,
+          totalAddToCart: allCartAdditions.length,
+          checkoutCompleted: !!userEvents.find(e => e.eventType === 'checkout_complete')
+        },
+        cartDetails: allCartAdditions
       };
-    }));
+    });
 
-    if (format === 'json') {
-      return res.json({
-        exportDate: new Date(),
-        totalUsers: exportData.length,
-        data: exportData
-      });
-    }
-
-    // CSV format (default)
-    const csvHeaders = [
-      'userId',
-      'abTestGroup',
-      'gender',
-      'age',
-      'shoppingFrequency',
-      'createdAt',
-      'completedAt',
-      'durationSeconds',
-      'productViews',
-      'productClicks',
-      'suggestionViews',
-      'suggestionClicks',
-      'suggestionAddToCart',
-      'totalAddToCart',
-      'checkoutCompleted'
-    ];
-
-    const csvRows = exportData.map(row =>
-      csvHeaders.map(header => {
-        const value = row[header];
-        // Handle values with commas or quotes
-        if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-          return `"${value.replace(/"/g, '""')}"`;
-        }
-        return value;
-      }).join(',')
-    );
-
-    const csv = [csvHeaders.join(','), ...csvRows].join('\n');
-
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="waikiki-study-export-${new Date().toISOString().split('T')[0]}.csv"`);
-    res.send(csv);
+    res.json({
+      exportDate: new Date(),
+      totalUsers: exportData.length,
+      users: exportData
+    });
   } catch (error) {
     console.error('Export error:', error);
     res.status(500).json({ error: 'Failed to export data' });
