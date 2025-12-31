@@ -27,6 +27,9 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Trust proxy for Railway/Vercel (needed for rate limiting and IP detection)
+app.set('trust proxy', true);
+
 // Request logging
 app.use((req, res, next) => {
   console.log(`📨 ${req.method} ${req.url}`);

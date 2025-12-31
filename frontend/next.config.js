@@ -1,5 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Improve compatibility with older browsers
+  compiler: {
+    // Remove console.log in production
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  // Transpile for broader browser support
+  transpilePackages: ['uuid'],
   images: {
     remotePatterns: [
       {
