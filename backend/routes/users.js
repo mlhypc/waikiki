@@ -163,8 +163,8 @@ router.patch('/:userId/survey', async (req, res) => {
       completedAt: new Date()
     };
 
-    // Stratified randomization: Assign to A/B/C group based on demographics
-    // This ensures balanced distribution across demographic profiles
+    // Weighted stratified randomization: Assign to A/B/C group based on demographics
+    // Group C gets 2x weight (25:25:50 distribution) while maintaining demographic balance
 
     // Count users with same demographic profile in each group
     const demographicCounts = await User.aggregate([
@@ -186,9 +186,20 @@ router.patch('/:userId/survey', async (req, res) => {
       counts[_id] = count;
     });
 
-    // Find group(s) with minimum count
-    const minCount = Math.min(counts.A, counts.B, counts.C);
-    const candidateGroups = Object.keys(counts).filter(group => counts[group] === minCount);
+    // Weighted assignment: C group gets 0.5 weight (2x more users)
+    // Lower weight = higher priority for assignment
+    const weights = { A: 1, B: 1, C: 0.5 };
+
+    // Calculate weighted scores
+    const scores = {
+      A: counts.A / weights.A,
+      B: counts.B / weights.B,
+      C: counts.C / weights.C
+    };
+
+    // Find group(s) with minimum weighted score
+    const minScore = Math.min(scores.A, scores.B, scores.C);
+    const candidateGroups = Object.keys(scores).filter(group => scores[group] === minScore);
 
     // Randomly select from candidate groups (if tie) for fairness
     const assignedGroup = candidateGroups[Math.floor(Math.random() * candidateGroups.length)];
