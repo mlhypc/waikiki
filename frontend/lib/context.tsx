@@ -123,6 +123,21 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
       } catch (error) {
         console.error('Failed to initialize user:', error);
+
+        // Fallback: Create offline user if backend is unavailable
+        const userId = getUserId();
+        const offlineUser: User = {
+          userId,
+          abTestGroup: null as any, // Will be assigned after survey if backend comes back
+          balance: 0,
+          totalPurchases: 0,
+          totalSpent: 0,
+        };
+
+        setUser(offlineUser);
+
+        // Initialize analytics in offline mode
+        initAnalytics(userId, sessionId, null as any);
       } finally {
         setIsLoading(false);
       }

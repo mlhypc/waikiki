@@ -16,6 +16,7 @@ const corsOptions = {
     'http://localhost:3000',
     'http://localhost:3001',
     'https://waikiki-frontend.vercel.app',
+    'https://waikiki-frontend-tez.vercel.app',
     process.env.FRONTEND_URL
   ].filter(Boolean),
   credentials: true,

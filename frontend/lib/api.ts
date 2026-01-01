@@ -1,5 +1,45 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
+// Retry helper for network requests
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  retries = 3,
+  timeout = 10000
+): Promise<Response> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response;
+    } catch (error: any) {
+      const isLastRetry = i === retries - 1;
+
+      if (isLastRetry) {
+        throw error;
+      }
+
+      // Wait before retry (exponential backoff)
+      const waitTime = Math.min(1000 * Math.pow(2, i), 5000);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+  }
+
+  throw new Error('All retries failed');
+}
+
 export interface User {
   userId: string;
   abTestGroup: 'A' | 'B' | 'C';
@@ -46,11 +86,16 @@ export interface TrackEventParams {
 
 // User API
 export const initUser = async (userId?: string): Promise<User> => {
-  const response = await fetch(`${API_URL}/api/users/init`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId }),
-  });
+  const response = await fetchWithRetry(
+    `${API_URL}/api/users/init`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId }),
+    },
+    3, // 3 retries
+    15000 // 15 second timeout per request
+  );
   const data = await response.json();
   return data.user;
 };
