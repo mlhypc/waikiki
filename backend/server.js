@@ -19,6 +19,8 @@ const corsOptions = {
     'https://waikiki-frontend-tez.vercel.app',
     'https://www.kaputalti.com',
     'https://kaputalti.com',
+    'https://www.app-itu.com',
+    'https://app-itu.com',
     process.env.FRONTEND_URL
   ].filter(Boolean),
   credentials: true,
