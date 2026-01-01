@@ -17,6 +17,8 @@ const corsOptions = {
     'http://localhost:3001',
     'https://waikiki-frontend.vercel.app',
     'https://waikiki-frontend-tez.vercel.app',
+    'https://www.kaputalti.com',
+    'https://kaputalti.com',
     process.env.FRONTEND_URL
   ].filter(Boolean),
   credentials: true,
