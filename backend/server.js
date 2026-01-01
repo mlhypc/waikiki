@@ -15,10 +15,6 @@ const corsOptions = {
   origin: [
     'http://localhost:3000',
     'http://localhost:3001',
-    'https://waikiki-frontend.vercel.app',
-    'https://waikiki-frontend-tez.vercel.app',
-    'https://www.kaputalti.com',
-    'https://kaputalti.com',
     'https://www.app-itu.com',
     'https://app-itu.com',
     process.env.FRONTEND_URL
