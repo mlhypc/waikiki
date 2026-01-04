@@ -140,24 +140,39 @@ router.patch('/:userId/survey', async (req, res) => {
       counts[_id] = count;
     });
 
-    // Weighted assignment: C group gets 0.5 weight (2x more users)
-    // Lower weight = higher priority for assignment
-    const weights = { A: 1, B: 1, C: 0.5 };
+    // Target distribution: 25% A, 25% B, 50% C
+    const targetRatios = { A: 0.25, B: 0.25, C: 0.5 };
 
-    // Calculate weighted scores
-    const scores = {
-      A: counts.A / weights.A,
-      B: counts.B / weights.B,
-      C: counts.C / weights.C
-    };
+    // Calculate total users in this demographic
+    const totalUsers = counts.A + counts.B + counts.C;
 
-    // Find group(s) with minimum weighted score
-    const minScore = Math.min(scores.A, scores.B, scores.C);
-    const candidateGroups = Object.keys(scores).filter(group => scores[group] === minScore);
+    // If no users yet, randomly assign with weighted probability
+    if (totalUsers === 0) {
+      const rand = Math.random();
+      if (rand < 0.25) {
+        user.abTestGroup = 'A';
+      } else if (rand < 0.5) {
+        user.abTestGroup = 'B';
+      } else {
+        user.abTestGroup = 'C';
+      }
+    } else {
+      // Calculate how far each group is from its target
+      // Negative score = below target (needs more users)
+      const scores = {
+        A: (counts.A / totalUsers) - targetRatios.A,
+        B: (counts.B / totalUsers) - targetRatios.B,
+        C: (counts.C / totalUsers) - targetRatios.C
+      };
 
-    // Randomly select from candidate groups (if tie) for fairness
-    const assignedGroup = candidateGroups[Math.floor(Math.random() * candidateGroups.length)];
-    user.abTestGroup = assignedGroup;
+      // Find group(s) that are most below target (most negative score)
+      const minScore = Math.min(scores.A, scores.B, scores.C);
+      const candidateGroups = Object.keys(scores).filter(group => scores[group] === minScore);
+
+      // Randomly select from candidate groups (if tie) for fairness
+      const assignedGroup = candidateGroups[Math.floor(Math.random() * candidateGroups.length)];
+      user.abTestGroup = assignedGroup;
+    }
 
     await user.save();
     res.json({ user, mode: 'survey', saved: true });
