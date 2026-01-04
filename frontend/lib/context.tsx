@@ -134,7 +134,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setUser(offlineUser);
 
         // Initialize analytics in offline mode
-        initAnalytics(userId, sessionId, null as any);
+        initAnalytics(userId, sessionId, null);
       } finally {
         setIsLoading(false);
       }

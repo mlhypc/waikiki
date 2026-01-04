@@ -251,8 +251,8 @@ export class Analytics {
 // Export singleton-like instance
 let analyticsInstance: Analytics | null = null;
 
-export const initAnalytics = (userId: string, sessionId: string, abTestGroup: string) => {
-  analyticsInstance = new Analytics(userId, sessionId, abTestGroup);
+export const initAnalytics = (userId: string, sessionId: string, abTestGroup: string | null) => {
+  analyticsInstance = new Analytics(userId, sessionId, abTestGroup || 'null');
   return analyticsInstance;
 };
 

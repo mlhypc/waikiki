@@ -93,7 +93,7 @@ export const Cart: React.FC = () => {
         await Promise.all(
           cart.map(async (item) => {
             try {
-              const suggestionsData = await getSuggestions(item.product.productId, user.abTestGroup, user.userId);
+              const suggestionsData = await getSuggestions(item.product.productId, user.abTestGroup!, user.userId);
               if (suggestionsData.length > 0) {
                 newSuggestions[item.product.productId] = suggestionsData;
 

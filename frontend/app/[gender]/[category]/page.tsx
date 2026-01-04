@@ -53,7 +53,7 @@ export default function CategoryPage() {
     loadingProductsRef.current = true;
 
     try {
-      const data = await getProducts(user.abTestGroup, categoryId, currentPageRef.current, 20, apiGender);
+      const data = await getProducts(user.abTestGroup ?? undefined, categoryId, currentPageRef.current, 20, apiGender);
 
       if (data.products.length === 0 || currentPageRef.current >= data.pagination.totalPages) {
         setHasMore(false);
@@ -89,7 +89,7 @@ export default function CategoryPage() {
       hasMoreRef.current = true;
 
       try {
-        const data = await getProducts(user.abTestGroup, categoryId, 1, 20, apiGender);
+        const data = await getProducts(user.abTestGroup ?? undefined, categoryId, 1, 20, apiGender);
         setProducts(data.products);
         setCurrentPage(2);
         currentPageRef.current = 2;
