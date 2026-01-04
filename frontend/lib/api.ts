@@ -42,10 +42,7 @@ async function fetchWithRetry(
 
 export interface User {
   userId: string;
-  abTestGroup: 'A' | 'B' | 'C';
-  balance: number;
-  totalPurchases: number;
-  totalSpent: number;
+  abTestGroup: 'A' | 'B' | 'C' | null;
   surveyResponses?: {
     age: string;
     gender: string;
@@ -102,20 +99,6 @@ export const initUser = async (userId?: string): Promise<User> => {
 
 export const getUser = async (userId: string): Promise<User> => {
   const response = await fetch(`${API_URL}/api/users/${userId}`);
-  const data = await response.json();
-  return data.user;
-};
-
-export const updateUserBalance = async (
-  userId: string,
-  amount: number,
-  type: 'deduct' | 'add'
-): Promise<User> => {
-  const response = await fetch(`${API_URL}/api/users/${userId}/balance`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ amount, type }),
-  });
   const data = await response.json();
   return data.user;
 };

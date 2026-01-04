@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { User, Product, initUser, updateUserBalance } from './api';
+import { User, Product, initUser } from './api';
 import { initAnalytics, getAnalytics } from './analytics';
 
 export interface CartItem {
@@ -128,10 +128,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const userId = getUserId();
         const offlineUser: User = {
           userId,
-          abTestGroup: null as any, // Will be assigned after survey if backend comes back
-          balance: 0,
-          totalPurchases: 0,
-          totalSpent: 0,
+          abTestGroup: null,
         };
 
         setUser(offlineUser);
@@ -255,10 +252,6 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (analytics) {
         analytics.trackCheckoutStart(cart, cartTotal);
       }
-
-      // Deduct balance (simulation mode - no balance check needed)
-      const updatedUser = await updateUserBalance(user.userId, cartTotal, 'deduct');
-      setUser(updatedUser);
 
       // Track checkout complete
       const orderId = uuidv4();

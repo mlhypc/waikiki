@@ -231,17 +231,18 @@ export default function StatsPage() {
           <h2 className="text-xl font-bold mb-4">👥 Users</h2>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
             <div className="border rounded p-3 bg-blue-50">
-              <p className="text-sm text-gray-600">Started</p>
+              <p className="text-sm text-gray-600">📝 Survey Completed</p>
               <p className="text-2xl font-bold text-blue-600">{stats.users.started}</p>
             </div>
             <div className="border rounded p-3 bg-green-50">
-              <p className="text-sm text-gray-600">✅ Completed</p>
+              <p className="text-sm text-gray-600">✅ Finished Simulation</p>
               <p className="text-2xl font-bold text-green-600">{stats.users.completedSimulations}</p>
               <p className="text-xs text-gray-500 mt-1">{stats.users.simulationCompletionRate}</p>
             </div>
             <div className="border rounded p-3 bg-red-50">
-              <p className="text-sm text-gray-600">Dropped Off</p>
+              <p className="text-sm text-gray-600">❌ Dropped Off</p>
               <p className="text-2xl font-bold text-red-600">{stats.users.dropoffCount}</p>
+              <p className="text-xs text-gray-500 mt-1">Survey done, no finish</p>
             </div>
             <div className="border rounded p-3">
               <p className="text-sm text-gray-600">Group A</p>
@@ -269,7 +270,7 @@ export default function StatsPage() {
               Survey Completed: <span className="font-semibold">{stats.users.surveyCompleted}</span> ({stats.users.surveyCompletionRate})
             </p>
             <p className="text-xs text-gray-500 mt-2">
-              ℹ️ Stats only include users who completed the simulation
+              ℹ️ All stats (Demographics, A/B Test, Checkout) show only users who COMPLETED THE SIMULATION. "Dropped Off" = survey done but didn't finish.
             </p>
           </div>
         </div>

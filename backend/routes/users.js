@@ -48,7 +48,6 @@ router.post('/init', async (req, res) => {
     const user = new User({
       userId: newUserId,
       abTestGroup,
-      balance: 1000, // $1000 decoy money
       metadata: {
         userAgent: req.headers['user-agent'],
         firstVisit: new Date(),
@@ -78,51 +77,6 @@ router.get('/:userId', async (req, res) => {
   } catch (error) {
     console.error('Get user error:', error);
     res.status(500).json({ error: 'Failed to get user' });
-  }
-});
-
-// Update user balance (after purchase)
-router.patch('/:userId/balance', async (req, res) => {
-  try {
-    // Check if survey mode is enabled
-    const surveyMode = process.env.SURVEY_MODE === 'true';
-
-    if (!surveyMode) {
-      // In test mode, return mock response
-      const { amount, type } = req.body;
-      const mockUser = {
-        userId: req.params.userId,
-        balance: type === 'deduct' ? 1000 - amount : 1000 + amount,
-        totalPurchases: type === 'deduct' ? 1 : 0,
-        totalSpent: type === 'deduct' ? amount : 0
-      };
-      return res.json({ user: mockUser, mode: 'test', saved: false });
-    }
-
-    const { userId } = req.params;
-    const { amount, type } = req.body; // type: 'deduct' or 'add'
-
-    const user = await User.findOne({ userId });
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    if (type === 'deduct') {
-      if (user.balance < amount) {
-        return res.status(400).json({ error: 'Insufficient balance' });
-      }
-      user.balance -= amount;
-      user.totalSpent += amount;
-      user.totalPurchases += 1;
-    } else if (type === 'add') {
-      user.balance += amount;
-    }
-
-    await user.save();
-    res.json({ user, mode: 'survey', saved: true });
-  } catch (error) {
-    console.error('Update balance error:', error);
-    res.status(500).json({ error: 'Failed to update balance' });
   }
 });
 

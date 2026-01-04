@@ -36,9 +36,10 @@ router.get('/', async (req, res) => {
       { $group: { _id: '$abTestGroup', count: { $sum: 1 } } }
     ]);
 
-    // Survey demographics - ONLY from users who completed survey
+    // Survey demographics - ONLY from users who COMPLETED SIMULATION
     const genderStats = await User.aggregate([
       { $match: {
+        simulationCompleted: true,
         'surveyResponses.completedAt': { $exists: true },
         'surveyResponses.gender': { $exists: true, $ne: '' }
       }},
@@ -47,6 +48,7 @@ router.get('/', async (req, res) => {
 
     const ageStats = await User.aggregate([
       { $match: {
+        simulationCompleted: true,
         'surveyResponses.completedAt': { $exists: true },
         'surveyResponses.age': { $exists: true, $ne: '' }
       }},
@@ -55,14 +57,16 @@ router.get('/', async (req, res) => {
 
     const frequencyStats = await User.aggregate([
       { $match: {
+        simulationCompleted: true,
         'surveyResponses.completedAt': { $exists: true },
         'surveyResponses.frequency': { $exists: true, $ne: '' }
       }},
       { $group: { _id: '$surveyResponses.frequency', count: { $sum: 1 } } }
     ]);
 
-    // Get userIds of users who completed survey ONLY
+    // Get userIds of users who COMPLETED SIMULATION
     const completedUserIds = await User.find({
+      simulationCompleted: true,
       'surveyResponses.completedAt': { $exists: true }
     }).distinct('userId');
 
@@ -99,8 +103,13 @@ router.get('/', async (req, res) => {
       userId: { $in: completedUserIds }
     });
 
-    const checkoutByGroup = await Event.aggregate([
-      { $match: { eventType: 'checkout_complete', userId: { $in: completedUserIds } } },
+    // Checkout by group - Get from User data, not Events (Events might have old group data)
+    const checkoutByGroup = await User.aggregate([
+      { $match: {
+        simulationCompleted: true,
+        'surveyResponses.completedAt': { $exists: true },
+        abTestGroup: { $ne: null }
+      }},
       { $group: { _id: '$abTestGroup', count: { $sum: 1 } } }
     ]);
 
